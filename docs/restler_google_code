@@ -1,0 +1,275 @@
+RESTful + Controller = Restler
+
+Restler is a base controller for `Pylons` projects that provides a set of default RESTful actions that can be overridden as needed. It also handles database  connectivity as long as a few simple rules are followed.
+
+It adds a bit of "convention-over-configuration" to Pylons and takes some inspiration from Rails' scaffold_resource generator (although templates aren't generated at this time). 
+
+Currently, `Elixir` is required, but this could (probably) be easily changed so that `ActiveMapper` is required instead, which would still allow `Elixir` to be used as `Elixir` uses `ActiveMapper` "under the hood." If you're looking for the most "Rails-esque" experience, you'll want to use `Elixir` anyway.
+
+
+== Quick Start ==
+
+=== Install Pylons 0.9.5 (or newer) ===
+
+{{{
+easy_install Pylons>=0.9.5
+}}}
+
+Pylons 0.9.4.1 should work fine too for the time being. Future development
+and testing will be done with Pylons 0.9.5.
+
+
+=== Make sure Routes 1.6.3 is installed ===
+
+Restler relies on some features of Routes not found in earlier versions of
+Routes. If you just installed or upgraded to Pylons 0.9.5, you can skip this
+step.
+
+{{{
+easy_install Routes>=1.6.3
+}}}
+
+
+=== Install Restler ===
+
+{{{
+easy_install -U Restler
+}}}
+
+Or, install from SVN:
+
+{{{
+svn checkout http://restler.googlecode.com/svn/trunk/ Restler
+cd Restler
+easy_install .
+}}}
+
+Either of these methods will also install Elixir and SQLAlchemy.
+
+
+=== Create a new Pylons project ===
+
+{{{ 
+paster create --template=pylons MyProject
+cd MyProject
+}}}
+
+To use Mako instead of Myghty for templating (recommended), modify line 32 of `myproject/config/middleware.py`:
+
+Change
+
+{{{
+config.init_app(global_conf, app_conf, package='myproject')
+}}}
+
+to
+        
+{{{
+config.init_app(global_conf, app_conf, package='myproject', template_engine='mako')
+}}}
+
+
+=== Add your database configuration to development.ini ===
+
+Add a line like this to the `[app:main]` section:
+       
+{{{
+sqlalchemy.dburi = <db_type>://<user>:<password>@<host>/<database>
+}}}
+
+Replace <db_type>, <user>, <password>, <host>, and <database> to reflect your setup. For example:
+
+{{{
+sqlalchemy.dburi = postgres://bob:s3kret@localhost/bobsdb
+}}}
+
+=== Make your project Restler aware ===
+
+Open `myproject/lib/base.py` and add the following lines below the existing imports:
+
+{{{
+import restler
+restler.init_model(model)
+}}}
+
+Change `BaseController` so that it inherits from `restler.BaseController` (noting that both the `class` and `return` from `__call__` have changed):
+
+{{{
+class BaseController(restler.BaseController):
+    def __call__(self, environ, start_response):
+        return super(BaseController, self).__call__(environ, start_response)
+}}}
+
+A quick and dirty way to secure the `new`, `edit`, and `delete` actions for _all_ controllers is to add this to your `BaseController` class:
+
+{{{
+    def new(self):
+        abort(403)
+    edit = delete = new
+}}}
+
+In real life, you'll probably want to use `AuthKit` or something similar to protect these actions.
+
+
+=== Declare one or more Elixir Entity classes in models/__init__.py ===
+
+{{{
+from elixir import Entity, has_field, String, Integer
+
+class Monkey(Entity):
+    has_field('slug', String(127))  # This is a string ID
+    has_field('name', String(127))
+    has_field('color', String(127))
+    has_field('age', Integer)
+    def __str__(self):
+        return ('Hi, my name is %s. I'm a(n) %i year old monkey. '
+                'I'm %s. '
+                'If you don't like me, you can delete me :(.' %
+                (self.name, self.age, self.color))
+    def __repr__(self):
+        return ('name: %s, color: %s, age: %i' %
+                (self.name, self.color, self.age))
+}}}
+
+Entity classes should use the "member name" of their associated resources ("Monkey" in this example).
+
+
+=== Create a controller for each of the Entity classes declared above ===
+
+Run `paster controller <controller-name>` for each entity, using the "collection name" of the associated resource as the <controller-name>:
+
+{{{
+paster controller monkies
+}}}
+
+Modify the controller slightly by removing the default index action that `paster` creates. It should end up looking like this:
+
+{{{
+from myproject.lib.base import *
+class MonkiesController(BaseController): pass
+}}}
+
+    
+=== Map URLs for resources/entities to controllers ===
+
+Add routes to `myproject/config/routing.py` for each of the Entity classes declared above. Add them right below the default 'error' route. You might want to remove the default `:controller/:action/:id` route
+
+{{{
+map.resource('monkey', 'monkies')  # member name, collection name
+}}}
+
+
+=== Create the database tables for the entity classes you declared above ===
+   
+Open myproject/websetup.py and add these imports:
+
+{{{
+import sqlalchemy, elixir
+import myproject.models as model
+}}}
+
+Add this line to the bottom of the `setup_config` function:
+
+{{{   
+create_all(conf)
+}}}
+
+Add this function, then close websetup.py:
+
+{{{    
+def create_all(conf):
+    print 'Creating all tables...'
+    engine = sqlalchemy.create_engine(conf['sqlalchemy.dburi'])
+    engine.echo = True
+    elixir.metadata.create_all()
+    print 'Done creating all tables.'
+}}}
+
+Run this command:
+    
+{{{
+paster setup-app development.ini
+}}}
+
+
+=== Create simple templates for the basic CRUD actions ===
+
+    * First, create the directory `myproject/templates/monkies` (note the use of collection name)
+    * Next, create `index.html`, `show.html`, `new.html`, and `edit.html` in `templates/monkies`
+    * Also, create `_form.html` that will be shared by `new.html` and `edit.html`
+    * Fill in the templates; here are some basic (Mako) templates to start with (these are generic and can be used with any entity/controller):
+
+{{{
+    ## new.html
+    <h1>New ${c.member_name.title()}: ${c.member.name}</h1>
+    ${h.form(h.url_for(c.collection_name), method='POST')}
+        <%include file='_form.html' />
+    ${h.end_form()}
+
+    ## show.html
+    <p>${c.member}</p>
+    <p>
+        ${h.link_to('Show all %s' % c.collection_name, h.url_for(c.collection_name))} | 
+        ${h.link_to('Update this %s' % c.member_name, h.url_for('edit_%s' % c.member_name, id=c.member.id))} | 
+        ${h.button_to('Destroy this %s' % c.member_name, h.url_for(c.member_name, id=c.member.id), method='DELETE', confirm='Are you sure?')}
+    </p>
+
+    ## edit.html
+    <h1>Edit ${c.member_name.title()}: ${c.member.name}</h1>
+    ${h.form(h.url_for(c.member_name, id=c.member.id), method='PUT')}
+        <%include file='_form.html' />
+    ${h.end_form()}
+
+    ## index.html
+    <h1>${c.collection_name.title()}</h1>
+    % for member in c.collection:
+        <p>${member}</p>
+        <p>
+            ${h.link_to('Update this %s' % c.member_name, h.url_for('edit_%s' % c.member_name,  id=member.id))} | 
+            ${h.button_to('Destroy this %s' % c.member_name, h.url_for(c.member_name, id=member.id), method='DELETE', confirm='Are you sure?')}
+        </p>
+    % endfor
+
+    ## _form.html
+    <h1>${c.member_name.title()}</h1>
+    % for col in c.Entity.c:
+        % if col.name != 'id':
+            <h2>${col.name.title()}</h2>
+            <p>${h.text_field(col.name, value=getattr(c.member, col.name, ''))}</p>
+        % endif
+    % endfor
+    ${h.submit()}
+}}}
+
+
+=== Fire up your Pylons app and try it out ===
+
+{{{
+paster serve --reload development.ini`
+}}}
+
+You should now be able to Create, Read, Update, and Delete resources. [Note: If you try to visit /monkies, you will get a 404. Create a new monkey first by visiting /monkies/new.]
+
+    * GET http://localhost:5000/monkies/new => redirects to the newly created monkey
+    * GET http://localhost:5000/monkies/1 => monkey with ID 1
+    * GET http://localhost:5000/monkies/bob => use 'slug' instead of ID
+    * GET http://localhost:5000/monkies => show all monkies
+    * POST http://localhost:5000/monkies => create a new monkey with post data
+    * PUT http://localhost:5000/monkies/1 => update monkey #1 with PUT data
+    * DELETE http://localhost:5000/monkies/1 => delete monkey with ID 1
+
+
+=== Look at all the things I'm _not_ doing ===
+
+    * The only database config required is specifying the connection parameters in the `ini` file (the `sqlalchemy.dburi` setting)
+    * No actions have been defined in the application's controllers
+    * Only one line is required per entity to create routes for all the basic actions
+
+Of course, as you customize your app and it gets more complex, you'll have to modify the basic setup, but it's a good starting point (at least, it's supposed to be; if you find that it's not, please do make an `issue` out of it).
+
+
+=== Epilogue ===
+
+Restler was extracted from the byCycle.org Bicycle Trip Planner (http://tripplanner.bycycle.org).
+
+Send feedback, corrections, et cetera to wyatt .DOT. lee .DOT. baldwin .AT. gmail .DOT. com.

@@ -1,0 +1,4 @@
+SVN
+* Removed `execfile` wonkiness in favor of importing restler then calling its
+  new `init_model` function (wlb 2007-04-17)
+* Extracted from byCycle repo at r776 and moved to Google Code

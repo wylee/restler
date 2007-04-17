@@ -1,0 +1,22 @@
+"Official" First (alpha) Release of Restler, a RESTful Base Controller for Pylons
+
+"Restler is a base controller for "Pylons":pylons projects that provides a set of default RESTful actions that can be overridden as needed. It also handles database connectivity as long as a few simple rules are followed.
+
+It adds a bit of 'convention-over-configuration' to Pylons and takes some inspiration from Rails' scaffold_resource generator..."
+
+Restler's aim is twofold: 1) make it easier to get started with Pylons and 2) encourage a RESTful project architecture.
+
+It attempts to remove some of the pain of database setup in a Pylons project by providing a default configuration. All users need to do is specify their connection settings with one line in a config file.
+
+The project is hosted at Google Code. There is a "Quick Start" guide there on the "project home page":project_home (which also serves as a mini introduction to Pylons).
+
+All feedback is welcome; please feel free to make use of the "issue tracker":tracker.
+
+PS If anyone happened to come across Restler on the Cheeseshop previously, some of the wonkiness has been removed (e.g., use of execfile to "include" restler) and most of the actions have been filled out such that they actually do (something closer to) the right thing.
+
+PPS Sorry about the comment spam earlier on Planet Python. I'm not really sure why comments are coming through, and I don't see any settings in Mephisto that would allow me to change that. I disabled comments for "the offending  post":twmaps and emailed the Planet Python moderator to see if there's anything that can be changed on that end.
+
+[pylons]http://pylonshq.com/
+[tracker]http://code.google.com/p/restler/issues/list
+[project_home]http://code.google.com/p/restler/
+[twmaps]http://blog.wyattbaldwin.com/2007/3/22/creating-a-google-maps-toscawidget
