@@ -1,178 +1,62 @@
-"""Restler -- Magical REST controller for Pylons.
-
-Adds support for Rails-style RESTful ActiveRecord resources. Provides a
-RESTful controller class that uses Elixir (and therefore SQLAlchemy) to
-interface with the database. Makes certain assumptions about project layout
-and uses those assumptions to take action.
-
-
-Assumptions
-===========
-
-* Routes are set up with ``map.resource`` like this:
-
-  map.resource(member_name, collection_name)
-
-  Example::
-
-      >>> from routes import *
-      >>> m = Mapper()
-      >>> m.resource('cow', 'cows')
-      >>> url_for('cow', id='bessy')
-      '/cows/bessy'
-      >>> url_for('new_cow')
-      '/cows/new'
-      >>> url_for('cows')
-      '/cows'
-
-  Nested resource routes are set up like this::
-
-      map.resource(member_name, collection_name,
-                   parent_resource={
-                       'collection_name': parent_collection_name,
-                       'member_name': parent_member_name
-                   })
-
-  Example nested route::
-
-      >>> m = Mapper()
-      >>> m.resource('cow', 'cows',
-      ...            parent_resource={'collection_name': 'farmers',
-      ...                             'member_name': 'farmer'})
-      >>> url_for('farmer_cow', farmer_id='bob', id='bessy')
-      '/farmers/bob/cows/bessy'
-      >>> url_for('farmer_new_cow', farmer_id='bob')
-      '/farmers/bob/cows/new'
-      >>> url_for('farmer_cows', farmer_id='bob')
-      '/farmers/bob/cows'
-
-* The [app:main] section of the ini file contains a sqlalchemy URI under the
-  key ``sqlalchemy.dburi``.
-
-  Example::
-
-      [app:main]
-      use = egg:SomeEgg
-      # other settings
-      sqlalchemy.dburi = postgres://pants:pants_password@localhost/pants_db
-      sqlalchemy.echo = true  # optional; defaults to false
-
-* lib.base imports your model under the name ``model`` and your model exposes
-  your ``elixir.Entity`` classes, regardless of where they are actually
-  defined.
-
-* Templates for a resource are in <yourproject>/templates/collection_name.
-
-  Template file names correspond to controller action names, so there should
-  be new, show, edit, and index templates.
-
-  The default is to render templates with an HTML extension. If ``format`` is
-  in ``request.params``, that format will override the default.
-
-  There are built-in methods to return HTML, HTML fragment, plain text, and
-  JSON content. All except the last use templates with a corresponding
-  extenstion (.html, .frag or .fragment, .text or .txt); JSON is rendered by
-  calling the __simplify__ method of either the Entity objects of a collection
-  or a single member/Entity object (depending on which action was invoked).
-
-  [Possible FIXME: Should the Entity classes define a to_json method instead?
-   But then that means they needs to know about JSON... which they are already
-   sort-of aware of via their __simplify__ method.]
-
-* Your controllers will inherit from ``RestController`` instead of
-  ``BaseController``.
-
-
-Installation
-============
-
-First, run ``easy_install Restler`` as usual. Then, in your Pylons project's
-lib/base.py, add the following line *beneath* the ``BaseController`` class
-definition::
-
-    execfile(__import__('restler').include_path)
-
-This includes Restler's content (actually ``restler.base``) into lib/base.py
-as if it had been written there directly.
-
-"""
+from pylons import Response, c, request
+from pylons.controllers import WSGIController
+from pylons.templating import render, render_response
+from pylons.helpers import abort, redirect_to
 from pylons.util import class_name_from_module_name
 from pylons.database import create_engine
 
 import sqlalchemy
-from elixir import metadata, objectstore
+
+import elixir
+from elixir import objectstore
 
 import simplejson
 
-from restler import helpers
-
-__all__ = ['RestController', 'engine', 'metadata', 'objectstore',
-           'session_context']
+__all__ = ['BaseController', 'init_model', 'engine', 'metadata',
+           'objectstore', 'session_context']
 
 
-try:
-    model
-except NameError:
-    if __name__ not in ('__main__', 'restler.base'):
-        raise NameError('``model`` must be defined in the file that includes'
-                        'this one')
-    else:
-        # This is all for testing
-        from sqlalchemy import create_engine, BoundMetaData
-        class __M(object): pass
-        model = __M()
-        dburi = globals().get('dburi', None)
-        if dburi:
-            model.engine = create_engine(dburi)
-            model.metadata = BoundMetaData(model.engine)
-        else:
-            model.engine = None
-            model.metadata = None
+engine, metadata, session_context = None, None, None
+model_initialized = False
 
 
-metadata = getattr(model, 'metadata', metadata)
-"""SQLAlchemy metadata. Prefer metadata defined in ``model``."""
+def init_model(the_model):
+    global model, engine, metadata, session_context, model_initialized
 
-engine = getattr(model, 'engine', None)
-"""SQLAlchemy database engine. Prefer engine defined in ``model``."""
+    model = the_model
+    """Module containing Elixir ``Entity`` classes."""
 
-if engine is None:
+    metadata = getattr(model, 'metadata', elixir.metadata)
+    """SQLAlchemy metadata. Prefer metadata defined in ``model``."""
+
     try:
-        # ``create_engine`` gets SQLAlchemy config from ini file
-        engine = create_engine()
+        engine = getattr(model, 'engine', create_engine())
+        """SQLAlchemy database engine. Prefer engine defined in ``model``."""
     except TypeError:
-        # ``create_engine`` only works when the site is running
+        # This happens when ``model`` doesn't define ``engine`` and
+        # ``create_engine`` gets called--the Pylons ``create_engine`` only
+        # works when the site is running because it magically gets the DB
+        # config from INI file the site is running under.
         import sys
-        engine = None
         sys.stderr.write('WARNING: Database engine was not defined in '
                          '``model`` and could not be created.\n')
+    else:
+        if not metadata.is_bound():
+            metadata.connect(engine)
 
-if engine is not None and not metadata.is_bound():
-    metadata.connect(engine)
+    session_context = getattr(model, 'session_context', objectstore.context)
 
-session_context = getattr(model, 'session_context', objectstore.context)
-
-try:
-    h
-except NameError:
-    import webhelpers as h
-for name in helpers.__all__:
-    setattr(h, name, getattr(helpers, name))
-
-try:
-    BaseController
-except NameError:
-    from pylons.controllers import WSGIController
-    class BaseController(WSGIController):
-        def __call__(self, environ, start_response):
-            return WSGIController.__call__(self, environ, start_response)
+    model_initialized = True
 
 
-class RestController(BaseController):
+class BaseController(WSGIController):
     """Base class for RESTful controllers."""
 
+    def __call__(self, environ, start_response):
+        return super(BaseController, self).__call__(environ, start_response)
+
     def __init__(self):
-        """Set up RESTful Controller.
+        """Initialize RESTful Controller.
 
         It is assumed that the controller file is named after the resource's
         collection name and that there is a corresponding top level template
@@ -181,6 +65,17 @@ class RestController(BaseController):
         /templates/hats.
 
         """
+        if not model_initialized:
+            raise ValueError("""
+``restler.init_model`` must be called with the module that contains (or
+imports) your Elixir ``Entity`` classes before the ``restler.BaseController``
+class can be used:
+
+    import some_module as model
+    import restler
+    restler.init_model(model)
+""")
+
         del session_context.current
 
         route = request.environ['routes.route']
@@ -189,7 +84,8 @@ class RestController(BaseController):
         self.controller = route_info['controller']
         self.action = route_info['action']
 
-        self.format = request.params.get('format', None)
+        self.format = request.params.get('format',
+                                         route_info.get('format', None))
         self.template = request.params.get('template', None)
         self._set_wrap()
 
@@ -233,6 +129,9 @@ class RestController(BaseController):
 
         # Create aliases for the generically named properties (``member``,
         # ``parent``, etc), using the resource and its parent's actual names.
+        # For example, if the resource's member name is "cat", the property
+        # ``cat`` will be created. It will correspond to the generically
+        # named property ``member``.
         cls = self.__class__
         setattr(cls, self.collection_name, cls.collection)
         setattr(cls, self.member_name, cls.member)
@@ -357,7 +256,7 @@ class RestController(BaseController):
         """Set attribute on both ``c`` and ``self``."""
         if isinstance(getattr(self.__class__, name, None), property):
             # I.e., just call the property's _set method
-            super(RestController, self).__setattr__(name, value)
+            super(BaseController, self).__setattr__(name, value)
         else:
             self._set_property([name], value)
 

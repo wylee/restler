@@ -1,5 +1,5 @@
 from setuptools import setup, find_packages
-from restler.base import __doc__ as base__doc__
+
 
 setup(
     name='Restler',
