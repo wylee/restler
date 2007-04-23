@@ -1,0 +1,7 @@
+## show.html
+<%inherit file="layout.html" />
+<h1>${c.member_name.title()}</h1>
+% for col in c.Entity.c:
+    <h2>${h.nice_name_for_col(col)}</h2>
+    <p>${getattr(c.member, col.name)}</p>
+% endfor

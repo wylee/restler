@@ -1,0 +1,12 @@
+## _form.html
+<h1>${c.action.title()} ${c.member_name.title()}</h1>
+<% member = c.member %>
+% for col in c.Entity.c:
+    % if col.key != 'id':
+        <div class="field">
+            <h2 class="title">${h.nice_name_for_col(col)}</h2>
+            <div class="value">${h.form_field_for_col(col, member)}</div>
+        </div>
+    % endif
+% endfor
+${h.submit(['Save Changes', 'Create New Item'][c.action == 'new'])}

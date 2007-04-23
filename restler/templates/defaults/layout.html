@@ -1,0 +1,60 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
+
+<html>
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <meta http-equiv="imagetoolbar" content="no" />
+    <title>${self.title()}</title>
+    <meta name="keywords" content="Pylons, Admin"/>
+    <meta name="description" content="Pylons Admin"/>
+    ${h.stylesheet_link_tag('restler.css')}
+  </head>
+
+  <body>
+    <div id="meta-top" class="meta">
+      ${self.meta_top()}    
+    </div>
+    
+    <div id="wrapper">
+      <div id="masthead">
+        ${self.masthead()}
+      </div>
+
+      <div id="header">
+        ${self.header()}
+      </div>
+
+      <div id="nav-wrapper">
+        ${self.nav()}
+      </div>
+
+      <div id="content-wrapper">
+        ${self.body()}
+      </div>
+
+      <div id="footer">
+        ${self.footer()}
+      </div>
+    </div>
+
+    <div id="meta-bottom" class="meta">
+      ${self.meta_bottom()}    
+      <div id="powered-by">
+        <a href="http://pylonshq.com/"
+           title="Powered by Pylons"
+           >${h.image_tag('powered_by.png', alt='Now powered by Pylons')}</a>
+      </div>      
+    </div>
+  </body>
+</html>
+
+
+<%def name="meta_top()"></%def>
+<%def name="title()">Pylons Admin</%def>
+<%def name="masthead()">
+  <h1 id="logo">${h.link_to('Pylons Admin', h.url_for('/'))}</h1>
+</%def>
+<%def name="header()"></%def>
+<%def name="nav()">${h.make_nav_menu(c)}</%def>
+<%def name="footer()">&copy; 2007 ${h.link_to('Wyatt Baldwin', 'http://wyattbaldwin.com/')}</%def>
+<%def name="meta_bottom()"></%def>

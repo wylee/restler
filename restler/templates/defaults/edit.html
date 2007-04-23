@@ -1,0 +1,5 @@
+## edit.html
+<%inherit file="layout.html" />
+${h.form(h.url_for(c.member_name, id=c.member.id), method='PUT')}
+    <%include file='_form.html' />
+${h.end_form()}

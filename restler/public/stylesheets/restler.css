@@ -1,0 +1,205 @@
+body {
+    margin: 0;
+    padding: 0;
+    font-family: Verdana, Arial, sans-serif;
+    font-size: 80%;
+    background: #ddd;
+    color: #222;
+}
+
+small, .small {
+    font-size: 80%;
+}
+
+img {
+    border: none;
+}
+a:link, a:visited {
+    color: #46d;
+}
+
+a:hover, a:active {
+    color: orange;
+}
+
+
+#wrapper {
+    background: white;
+}
+
+
+/* Masthead */
+div#masthead {
+    padding: 25px 10px;
+    background: #bfe0ff; /* d1ffba ffd0cc*/
+    border-bottom: 1px solid #99b3cc; /*a7cc95 fd766a*/
+}
+h1#logo {
+    margin: 0;
+    padding: 0;
+    font-size: 32px;
+}
+h1#logo a {
+    text-decoration: none;
+    color: white;
+}
+
+
+/* Navigation */
+ul#nav, ul#meta-bottom-nav {
+    margin: 0;
+    padding: 5px 10px;
+    padding-bottom: 0;
+    list-style-type: none;
+    border-bottom: 1px solid #a7cc95; /*#fd766a;*/
+    background: #d1ffba;/*#ffd0cc;*/
+}
+
+ul#meta-bottom-nav {
+    border: none;
+    background: none;
+}
+
+ul.menu {
+    margin: 0;
+    padding: 0;
+    padding-bottom: 5px;
+    list-style-type: none;
+}
+ul.menu li {
+    display: inline;
+    border-right: 1px solid #a7cc95;
+}
+ul.menu li.last {
+    border-right: none;
+}
+ul.menu a, ul.menu form.button-to input {
+    text-decoration: none;
+    color: #454;
+    font-weight: bold;
+    padding: 0 10px;
+}
+ul.menu li.first a {
+    padding-left: 0;
+}
+ul.menu a:hover, ul.menu form.button-to input:hover {
+    color: #686;
+}
+
+form.button-to, form.button-to div {
+    display: inline;
+    padding: 0;
+    margin: 0;
+}
+form.button-to input {
+    margin: 0;
+    border: none;
+    background: none;
+    cursor: pointer;
+}
+
+
+/* Content */
+div#content-wrapper {
+    padding: 10px;
+}
+div#content-wrapper h1 {
+    margin-top: 0;
+}
+
+div#content {
+    width: 68%;
+    float: left;
+    padding-right: 1%;
+}
+div#sidebar {
+    width: 28%;
+    float: right;
+    padding-left: 1%;
+    border-left: 1px dotted #99b3cc;
+}
+div.links table {
+    border-collapse: collapse;
+}
+div.links table td, div.links table th {
+    padding: 5px;
+    border: 1px solid #bfe0ff;
+}
+
+table.collection {
+    width: 100%;
+    border-collapse: collapse;
+}
+table.collection td, table.collection th {
+    border: 1px solid #99b3cc;
+    padding: 5px;
+    text-align: left;
+}
+table.collection td.actions a {
+    text-decoration: none;
+}
+table.collection td.actions form.button-to div input {
+    margin: 0;
+    padding: 0;
+    border: none;
+    background: none;
+    color: #46d;
+    cursor: pointer;
+}
+
+
+/* Form Fields */
+form div.field {
+    border: 1px solid #99b3cc;
+    margin-bottom: 5px;
+    padding: 5px;
+}
+form div.field h2.title {
+    margin-top: 0;
+    margin-bottom: 5px;
+}
+form div.field div.value {
+
+}
+
+
+/* Footer */
+div#footer {
+    padding: 5px 10px;
+    font-size: 80%;
+    background: #bfe0ff;
+    border: solid #99b3cc;
+    border-width: 1px 0;
+    clear: both;
+}
+div#footer p {
+    margin: 0;
+}
+div#footer a {
+    color: #444;
+}
+div#footer a:hover {
+    color: #005;
+}
+
+
+/* Meta Bottom */
+div#meta-bottom {
+    text-align: center;
+}
+
+div#powered-by {
+    margin-top: 25px;
+}
+
+
+/* Misc */
+
+.first-heading {
+    padding-top: 0;
+    margin-top: 0;
+}
+
+.clear-float {
+    clear: both;
+}

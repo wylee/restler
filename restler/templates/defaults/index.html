@@ -1,0 +1,54 @@
+## index.html
+<%inherit file="layout.html" />
+<h1>${c.collection_name.title()}</h1>
+% if c.collection:
+    <% cols = c.Entity.c %>
+
+    ${self.paginate_controls()}
+
+    <table class="collection">
+        <tr>
+            % for col in cols:
+                <th>${h.nice_name_for_col(col)}</th>
+            % endfor
+            <th>Actions</th>
+        </tr>
+        
+        % for m in c.collection:
+            <tr>
+                % for col in cols:
+                    <%
+                        v = str(getattr(m, col.name))
+                        if len(v) > 20:
+                            v = v[:20] + '...'
+                    %>
+                    <td>${v}</td>
+                % endfor
+                <td class="actions">
+                    ${h.nav_list_for_member(c.member_name, m.id, (c.parent_member_name or None), (c.parent_id or None), terse_link_text=True, join_with='&middot;')}
+                </td>
+            </tr>
+        % endfor
+    </table>
+
+    ${self.paginate_controls()}
+
+% else:
+    <p>
+        No ${c.collection_name}. ${h.link_to('Create one &raquo;', h.url_for(action='new'))}
+    </p>
+% endif
+
+
+<%def name="paginate_controls()">
+    <div class="paginate-controls" style="margin: 5px 0;">
+        <% prev_page, next_page, per_page = h.get_prev_next_per_page(c.paginator) %>
+        <div class="prev" style="float:left;">
+            ${h.link_to('&laquo; Previous', h.url_for(c.collection_name, page=prev_page, per_page=per_page), title='Go to previous page of %s' % c.collection_name)}
+        </div>
+        <div class="next" style="float:right;">
+            ${h.link_to('Next &raquo;', h.url_for(c.collection_name, page=next_page, per_page=per_page), title='Go to next page of %s' % c.collection_name)}
+        </div>
+        <div style="clear: both;"></div>
+    </div>
+</%def>
