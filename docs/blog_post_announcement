@@ -8,9 +8,11 @@ Restler's aim is twofold: 1) make it easier to get started with Pylons and 2) en
 
 It attempts to remove some of the pain of database setup in a Pylons project by providing a default configuration. All users need to do is specify their connection settings with one line in a config file.
 
-The project is hosted at Google Code. There is a "Quick Start" guide there on the "project home page":project_home (which also serves as a mini introduction to Pylons).
+The project is hosted at Google Code. There is a "Quick Start" guide there on the "project home page":project_home (which also serves as a mini introduction to getting started with Pylons).
 
 All feedback is welcome; please feel free to make use of the "issue tracker":tracker.
+
+--
 
 PS If anyone happened to come across Restler on the Cheeseshop previously, some of the wonkiness has been removed (e.g., use of execfile to "include" restler) and most of the actions have been filled out such that they actually do (something closer to) the right thing.
 
