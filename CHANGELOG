@@ -7,3 +7,10 @@ SVN
 * Added a class factory to generate `RestController`s that are aware of a
   specific model; this replaces setting a global `model` (wlb 2007-04-22)
 * Added pagination support for collections (wlb 2007-04-22)
+* Allow the parent model module to be different from the resource's model
+  module by adding a keyword arg to `BaseController` function and using that
+  model (if given) instead of the resource's model.
+* Note whether a resource has a foreign key pointer to its parent
+* Allow entities to be selected by "alternate IDs"; if an entity class
+  defines the list `alternate_id`, those IDs will be tried when finding an
+  object in the database

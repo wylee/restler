@@ -24,18 +24,27 @@ options = dict(
 )
 
 
-def BaseController(the_model):
+def BaseController(the_model, the_parent_model=None):
     """``BaseController`` class factory.
 
-    Each generated ``BaseController`` class has ``the_model`` attached to it.
+    Each generated ``BaseController`` class has ``the_model`` and
+    ``the_parent_model`` attached to it. If ``parent_model`` is not specified,
+    it defaults to ``the_model`` (i.e., normally, the model for a resource
+    and its parent are the same).
 
     """
     init_model(the_model)
+    if the_parent_model is None:
+        the_parent_model = the_model
+    else:
+        if the_parent_model is not the_model:
+            init_model(the_parent_model)
 
     class BaseController(WSGIController):
         """Base class for RESTful controllers."""
-        
+
         model = the_model
+        parent_model = the_parent_model
 
         def __init__(self):
             """Initialize RESTful Controller.
@@ -48,6 +57,8 @@ def BaseController(the_model):
 
             """
             del self.model.session_context.current
+            if self.parent_model is not self.model:
+                del self.parent_model.session_context.current
 
             route = request.environ['routes.route']
             route_info = request.environ['pylons.routes_dict']
@@ -92,11 +103,17 @@ def BaseController(the_model):
                 # Import entity class for parent resource
                 name = class_name_from_module_name(self.parent_member_name)
                 self.parent_entity_name = name
-                self.ParentEntity = getattr(self.model, name)
+                self.ParentEntity = getattr(self.parent_model, name)
 
                 self._set_parent_by_id(self.parent_id)
+                
+                if self.Entity.c.get(self.parent_id_name, None) is not None:
+                    self.has_fk_to_parent = True
+                else:
+                    self.has_fk_to_parent = False
             else:
                 self.is_nested = False
+                self.has_fk_to_parent = False
 
             # Create aliases for the generically named properties (``member``,
             # ``parent``, etc), using the resource and its parent's actual
@@ -194,7 +211,7 @@ def BaseController(the_model):
             params = request.params
             for name in params:
                 setattr(self.member, name, params[name])
-            if self.is_nested:
+            if self.is_nested and self.has_fk_to_parent:
                 setattr(self.member, self.parent_id_name, self.parent_id)
             self.member.flush()
             self.member.refresh()
@@ -202,7 +219,7 @@ def BaseController(the_model):
         def _redirect_to_member(self):
             args = {'id': self.member.id, 'action': 'show',
                     'format': self.format}
-            if self.is_nested:
+            if self.is_nested and self.has_fk_to_parent:
                 args[self.parent_id_name] = self.parent_id
             redirect_to(**args)
 
@@ -220,7 +237,7 @@ def BaseController(the_model):
 
         def _redirect_to_collection(self):
             args = {'action': 'index', 'format': self.format}
-            if self.is_nested:
+            if self.is_nested and self.has_fk_to_parent:
                 args[self.parent_id_name] = self.parent_id
             redirect_to(**args)
 
@@ -270,7 +287,7 @@ def BaseController(the_model):
 
         def _set_member_by_id(self, id):
             args = {}
-            if self.is_nested:
+            if self.is_nested and self.has_fk_to_parent:
                 args[self.parent_id_name] = self.parent.id
             self.member = self._get_entity_or_404(self.Entity, id, **args)
 
@@ -278,7 +295,7 @@ def BaseController(the_model):
             """Get entity with ID ``id``
 
             ``Entity``
-                The entity model class to select from
+                The entity class to select from
 
             ``id``
                 The entity's ID
@@ -291,8 +308,16 @@ def BaseController(the_model):
 
             """
             entity = None
-            if 'slug' in Entity.c:
-                entity = Entity.get_by(slug=str(id), **kwargs)
+            if hasattr(Entity, 'alternate_ids'):
+                ids = Entity.alternate_ids
+                for alt_id in ids:
+                    kwargs[alt_id] = id
+                    entity = Entity.get_by(**kwargs)
+                    kwargs.pop(alt_id)
+                    if entity is not None:
+                        break
+            elif 'slug' in Entity.c:
+                entity = Entity.get_by(slug=id, **kwargs)
             if entity is None:
                 try:
                     entity = Entity.get_by(id=id, **kwargs)
@@ -326,9 +351,9 @@ def BaseController(the_model):
                 per_page=per_page,
                 order_by=[entity.c.id],
             ))
-            if self.is_nested:
-                args['query_args'] = [entity.c[self.parent_id_name] ==
-                                      self.parent.id]
+            if self.is_nested and self.has_fk_to_parent:
+                col = entity.c[self.parent_id_name]
+                args['query_args'] = [col == self.parent.id]
             if hasattr(self, '_count'):
                 args['item_count'] = self._count
             self.paginator, self.collection = paginate(entity, **args)
