@@ -1,6 +1,14 @@
 ## new.html
 <%inherit file="layout.html" />
 ${c.parent_member_name}
-${h.form(h.url_for(c.parent_member_name + '_' + c.collection_name, app_id=c.parent_id), method='POST')}
+<%
+    url_args = {}
+    if c.is_nested:
+        url_text = c.parent_member_name + '_' + c.collection_name
+        url_args[c.parent_id_name] = c.parent_id
+    else:
+        url_text = c.collection_name
+%>
+${h.form(h.url_for(url_text, **url_args), method='POST')}
     <%include file='_form.html' />
 ${h.end_form()}
