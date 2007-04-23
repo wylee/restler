@@ -100,7 +100,7 @@ def nav_list_for_resource(context):
     if context.is_nested:
         parent = context.parent
         p_name = context.parent_member_name
-        p_link_text = 'Up to %s "%s"' % (p_name.title(), parent.title)
+        p_link_text = 'Up to Parent %s' % p_name.title()
         url_args = {'id': parent.id}
         gp_m_name = context.grandparent_member_name
         if gp_m_name:
