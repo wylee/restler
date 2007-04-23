@@ -1,4 +1,9 @@
 SVN
+* Extracted from byCycle repo at r776 and moved to Google Code
 * Removed `execfile` wonkiness in favor of importing restler then calling its
   new `init_model` function (wlb 2007-04-17)
-* Extracted from byCycle repo at r776 and moved to Google Code
+* Added restler.options dict, similar to elixir's global options
+  (wlb 2007-04-22)
+* Added a class factory to generate `RestController`s that are aware of a
+  specific model; this replaces setting a global `model` (wlb 2007-04-22)
+* Added pagination support for collections (wlb 2007-04-22)
