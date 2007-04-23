@@ -2,14 +2,14 @@ RESTful + Controller = Restler
 
 Restler is a base controller for `Pylons` projects that provides a set of default RESTful actions that can be overridden as needed. It also handles database  connectivity as long as a few simple rules are followed.
 
-It adds a bit of 'convention-over-configuration' to Pylons and takes some inspiration from Rails' scaffold_resource generator. Templates aren't generated at this time, but a set of default generic templates are supplied which can be copied and modified to suit. 
+It adds a bit of 'convention-over-configuration' to Pylons and takes some inspiration from Rails' scaffold_resource generator. Templates aren't generated at this time, but a set of default generic templates are supplied which can be copied and modified to suit.
 
 `ActiveMapper` model classes are required. This means you can also use `Elixir`, since `Elixir` uses `ActiveMapper` "under the hood." If you're looking for the most 'Rails-esque' experience, you'll probably want to use `Elixir`.
 
 
 == Quick Start ==
 
-=== Install Pylons 0.9.5 (or newer) ===
+=== Install Pylons 0.9.5 ===
 
 {{{
 easy_install Pylons>=0.9.5
@@ -47,7 +47,7 @@ python setup.py develop
 
 === Create a new Pylons project ===
 
-{{{ 
+{{{
 paster create --template=pylons MyProject
 cd MyProject
 }}}
@@ -61,7 +61,7 @@ config.init_app(global_conf, app_conf, package='myproject')
 }}}
 
 to
-        
+
 {{{
 config.init_app(global_conf, app_conf, package='myproject', template_engine='mako')
 }}}
@@ -70,7 +70,7 @@ config.init_app(global_conf, app_conf, package='myproject', template_engine='mak
 === Add your database configuration to development.ini ===
 
 Add a line like this to the `[app:main]` section:
-       
+
 {{{
 sqlalchemy.dburi = <db_type>://<user>:<password>@<host>/<database>
 }}}
@@ -104,6 +104,8 @@ class RestController(restler.BaseController(model)):
 
 In real life, you'll probably want to use `AuthKit` or something similar to protect these actions.
 
+Note: Don't remove the default `BaseController`; it's needed by the `error` and `template` controllers.
+
 
 === Declare one or more `ActiveMapper` or `Elixir` `Entity` classes in models/__init__.py ===
 
@@ -115,25 +117,25 @@ from elixir import String, Integer
 
 class Directory(Entity):
     """A `Directory` contains `Page`s."""
-    has_field('title', String)
-    has_field('slug', String)
+    has_field('title', String(40))
+    has_field('slug', String(20))
     has_many('pages', of_kind='Page')
 
 class Page(Entity):
     """A `Page` belongs to a `Directory`."""
-    has_field('title', String)
-    has_field('slug', String)
+    has_field('title', String(40))
+    has_field('slug', String(20))
     has_field('content', String)
     has_field('sidebar', String)
     belongs_to('directory', of_kind='Directory')
 }}}
 
-Entity classes should use the 'member name' of their associated resources ('Page' in this example).
+Entity classes should use the "member name" of their associated resources ('Page' in this example).
 
 
 === Create a controller for each of the Entity classes declared above ===
 
-Use the 'collection name' of the associated resource as the controller name:
+Use the "collection name" of the associated resource as the controller name:
 
 {{{
 # directories.py
@@ -145,7 +147,7 @@ from myproject.lib.base import *
 class PagesController(RestController): pass
 }}}
 
-    
+
 === Map URLs for resources/entities to controllers ===
 
 Add routes to `myproject/config/routing.py` for each of the Entity classes declared above. Add them right below the default 'error' route. You might want to remove the default `:controller/:action/:id` route
@@ -158,7 +160,7 @@ map.resource('page', 'pages',
 
 
 === Create the database tables for the entity classes you declared above ===
-   
+
 Open myproject/websetup.py and add these imports:
 
 {{{
@@ -168,7 +170,7 @@ import myproject.models as model
 
 Add this line to the bottom of the `setup_config` function:
 
-{{{   
+{{{
     engine = sqlalchemy.create_engine(conf['sqlalchemy.dburi'])
     engine.echo = True
     model.metadata.connect(engine)
@@ -178,7 +180,7 @@ Add this line to the bottom of the `setup_config` function:
 
 Add these functions, then close websetup.py:
 
-{{{    
+{{{
 def drop_all_tables():
     really_drop = raw_input('Really drop all tables?! [yes/N] ')
     if really_drop.lower().strip() == 'yes':
@@ -194,7 +196,7 @@ def create_all_tables():
 }}}
 
 Run this command:
-    
+
 {{{
 paster setup-app development.ini
 }}}
@@ -258,4 +260,4 @@ Of course, as you customize your app and it gets more complex, you'll have to mo
 
 Restler was extracted from the byCycle.org Bicycle Trip Planner (http://tripplanner.bycycle.org).
 
-Send feedback, corrections, et cetera to wyatt .DOT. lee .DOT. baldwin .AT. gmail .DOT. com.
+Send feedback, corrections, et cetera to wyatt .DOT. lee .DOT. baldwin .AT. gmail .DOT. com or [http://code.google.com/p/restler/issues/list create an issue].
