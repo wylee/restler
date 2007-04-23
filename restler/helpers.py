@@ -115,22 +115,24 @@ def nav_list_for_resource(context):
     else:
         url_args = {}
     m_name = context.member_name
+    c_name = context.collection_name
     member = context.member
-    resource_list = nav_list_for_collection(m_name, **url_args)
+    resource_list = nav_list_for_collection(m_name, c_name, **url_args)
     if context.action != 'new' and member:
         resource_list += nav_list_for_member(m_name, member.id, **url_args)
     lists.append(resource_list)
     return lists
 
 
-def nav_list_for_collection(member_name, parent_name=None, parent_id=None):
+def nav_list_for_collection(member_name, collection_name, parent_name=None,
+                            parent_id=None):
     if parent_name is not parent_id is not None:
         url_args = {'%s_id' % parent_name: parent_id}
-        list_url = '%s_%s' % (parent_name, member_name)
+        list_url = '%s_%s' % (parent_name, collection_name)
         new_url = '%s_new_%s' % (parent_name, member_name)
     else:
         url_args = {}
-        list_url = '%s' % member_name
+        list_url = '%s' % collection_name
         new_url = 'new_%s' % member_name
     list_link_text = '%s List' % member_name.title()
     new_link_text = 'New %s' % member_name.title()
