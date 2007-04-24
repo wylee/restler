@@ -43,8 +43,8 @@ def BaseController(the_model, the_parent_model=None):
     class BaseController(WSGIController):
         """Base class for RESTful controllers."""
 
-        model = the_model
-        parent_model = the_parent_model
+        _model = the_model
+        _parent_model = the_parent_model
 
         def __init__(self):
             """Initialize RESTful Controller.
@@ -56,9 +56,9 @@ def BaseController(the_model, the_parent_model=None):
             directory at /templates/hats.
 
             """
-            del self.model.session_context.current
-            if self.parent_model is not self.model:
-                del self.parent_model.session_context.current
+            del self._model.session_context.current
+            if self._parent_model is not self._model:
+                del self._parent_model.session_context.current
 
             route = request.environ['routes.route']
             route_info = request.environ['pylons.routes_dict']
@@ -76,12 +76,19 @@ def BaseController(the_model, the_parent_model=None):
             self.member_name = (getattr(self, 'member_name', None) or
                                 route.member_name)
 
+            self.parent_resource = route.parent_resource
+
+            self._init_entity()
+            self._init_parent_entity(route_info)
+            self._create_properties()
+
+        def _init_entity(self):
             # Import entity class for resource
             self.entity_name = class_name_from_module_name(self.member_name)
-            self.Entity = getattr(self.model, self.entity_name)
+            self.Entity = getattr(self._model, self.entity_name)
 
+        def _init_parent_entity(self, route_info):
             # Do setup for parent resource, if this resource is nested
-            self.parent_resource = route.parent_resource
             if self.parent_resource is not None:
                 self.is_nested = True
 
@@ -103,11 +110,12 @@ def BaseController(the_model, the_parent_model=None):
                 # Import entity class for parent resource
                 name = class_name_from_module_name(self.parent_member_name)
                 self.parent_entity_name = name
-                self.ParentEntity = getattr(self.parent_model, name)
+                self.ParentEntity = getattr(self._parent_model, name)
 
                 self._set_parent_by_id(self.parent_id)
-                
-                if self.Entity.c.get(self.parent_id_name, None) is not None:
+
+                if (hasattr(self, 'Entity') and 
+                    self.Entity.c.get(self.parent_id_name, None) is not None):
                     self.has_fk_to_parent = True
                 else:
                     self.has_fk_to_parent = False
@@ -115,6 +123,7 @@ def BaseController(the_model, the_parent_model=None):
                 self.is_nested = False
                 self.has_fk_to_parent = False
 
+        def _create_properties(self):
             # Create aliases for the generically named properties (``member``,
             # ``parent``, etc), using the resource and its parent's actual
             # names. For example, if the resource's member name is "cat", the
