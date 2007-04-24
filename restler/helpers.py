@@ -67,7 +67,7 @@ def make_nav_menu(c, id='nav', menu_class='menu'):
 
 
 def make_nav_list(lists, id='nav', menu_class='menu'):
-    """Create a list of lists, where the list items are links.
+    """Create a list of lists, where the inner list items are links.
 
     ``lists``
         A list of lists of {a: link, **li_tag_attrs}
@@ -99,16 +99,7 @@ def nav_list_for_resource(c):
     lists = []
     controller = c.controller
     if c.is_nested:
-        parent = c.parent
-        p_name = c.parent_member_name
-        p_link_text = 'Up to Parent %s' % p_name.title()
-        url_args = {'controller': controller, 'id': parent.id}
-        gp_m_name = c.grandparent_member_name
-        if gp_m_name:
-            gp_id_name = '%s_id' % gp_m_name
-            grandparent_id = getattr(parent, gp_id_name)
-            url_args[gp_id_name] = grandparent_id
-        lists.append([{'a': link_to(p_link_text, url(**url_args))}])
+        lists += nav_list_for_parent(c)
         nav_list_args = {'parent_name': p_name, 'parent_id': parent.id}
     else:
         nav_list_args = {}
@@ -122,6 +113,23 @@ def nav_list_for_resource(c):
         resource_list += m_list
     lists.append(resource_list)
     return lists
+
+
+def nav_list_for_parent(c):
+    if c.is_nested:
+        # Link up to parent resource
+        parent = c.parent
+        p_name = c.parent_member_name
+        p_link_text = 'Up to Parent %s' % p_name.title()
+        url_args = {'controller': c.parent_collection_name, 'action': 'show',
+                    c.parent_id_name: None, 'id': parent.id}
+        gp_m_name = c.grandparent_member_name
+        if gp_m_name:
+            gp_id_name = '%s_id' % gp_m_name
+            grandparent_id = getattr(parent, gp_id_name)
+            url_args[gp_id_name] = grandparent_id
+        return [{'a': link_to(p_link_text, url(**url_args))}]
+    return []
 
 
 def nav_list_for_collection(member_name, controller, parent_name=None,
