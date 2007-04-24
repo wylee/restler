@@ -240,17 +240,14 @@ def get_prev_next_per_page(paginator):
 
     """
     page = paginator.current_page
-    per_page = paginator.items_per_page
-    item_count = paginator.item_count
     prev_page = page - 1
-    if prev_page < 0:
-        prev_page = 0
     next_page = page + 1
-    last_page = item_count / per_page
-    if (item_count % per_page) == 0:
-        last_page -= 1
+    last_page = len(paginator) - 1
+    per_page = paginator.items_per_page
+    if prev_page < 0:
+        prev_page = last_page
     if next_page > last_page:
-        next_page = last_page
+        next_page = 0
     return prev_page, next_page, per_page
 
 

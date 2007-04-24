@@ -363,10 +363,7 @@ def BaseController(the_model, the_parent_model=None):
             if self.is_nested and self.has_fk_to_parent:
                 col = entity.c[self.parent_id_name]
                 args['query_args'] = [col == self.parent.id]
-            if hasattr(self, '_count'):
-                args['item_count'] = self._count
             self.paginator, self.collection = paginate(entity, **args)
-            self._count = self.paginator.item_count  # O(1)
 
         def _render_response(self, format=None, template=None, wrap=None,
                              **response_args):
