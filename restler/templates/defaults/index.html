@@ -42,12 +42,17 @@
 
 <%def name="paginate_controls()">
     <div class="paginate-controls" style="margin: 5px 0;">
-        <% prev_page, next_page, per_page = h.get_prev_next_per_page(c.paginator) %>
+        <%
+            prev_page, next_page, per_page = h.get_prev_next_per_page(c.paginator) 
+            url_args = dict(controller=c.controller, action='index',
+                            page=prev_page, per_page=per_page)
+        %>
         <div class="prev" style="float:left;">
-            ${h.link_to('&laquo; Previous', h.url_for(c.collection_name, page=prev_page, per_page=per_page), title='Go to previous page of %s' % c.collection_name)}
+            ${h.link_to('&laquo; Previous', h.url_for(**url_args), title='Go to previous page of %s' % c.collection_name)}
         </div>
         <div class="next" style="float:right;">
-            ${h.link_to('Next &raquo;', h.url_for(c.collection_name, page=next_page, per_page=per_page), title='Go to next page of %s' % c.collection_name)}
+            <% url_args['page'] = next_page %>
+            ${h.link_to('Next &raquo;', h.url_for(**url_args), title='Go to next page of %s' % c.collection_name)}
         </div>
         <div style="clear: both;"></div>
     </div>
