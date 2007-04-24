@@ -7,6 +7,7 @@ __all__ = [
     'make_nav_menu',
     'make_nav_list',
     'nav_list_for_resource',
+    'nav_list_for_parent',
     'nav_list_for_collection',
     'nav_list_for_member',
     'form_field_for_col',
