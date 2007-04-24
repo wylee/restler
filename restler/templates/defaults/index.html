@@ -25,7 +25,7 @@
                     <td>${v}</td>
                 % endfor
                 <td class="actions">
-                    ${h.nav_list_for_member(c.member_name, m.id, (c.parent_member_name or None), (c.parent_id or None), terse_link_text=True, join_with='&middot;')}
+                    ${h.nav_list_for_member(c.member_name, c.controller, m.id, (c.parent_member_name or None), (c.parent_id or None), terse_link_text=True, join_with='&middot;')}
                 </td>
             </tr>
         % endfor

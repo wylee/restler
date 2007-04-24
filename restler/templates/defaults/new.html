@@ -1,14 +1,11 @@
 ## new.html
 <%inherit file="layout.html" />
-${c.parent_member_name}
 <%
-    url_args = {}
+    # POST to collection URL
+    url_args = {'controller': c.controller, 'action': 'index'}
     if c.is_nested:
-        url_text = c.parent_member_name + '_' + c.collection_name
         url_args[c.parent_id_name] = c.parent_id
-    else:
-        url_text = c.collection_name
 %>
-${h.form(h.url_for(url_text, **url_args), method='POST')}
+${h.form(h.url_for(**url_args), method='POST')}
     <%include file='_form.html' />
 ${h.end_form()}

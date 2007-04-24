@@ -14,3 +14,9 @@ SVN
 * Allow entities to be selected by "alternate IDs"; if an entity class
   defines the list `alternate_id`, those IDs will be tried when finding an
   object in the database
+* In all nav helpers and templates, instead of using named routes to generate
+  URLs, set `controller`, `action`, etc as necessary. This allows the helpers
+  to also be used in the case where RESTful routes are created manually (i.e.,
+  using `map.connect`) without names. Although this sounds harder to do (it's
+  a little more manual), I was able to move several lines of code and some
+  superfluous logic. (wlb 2007-04-23)

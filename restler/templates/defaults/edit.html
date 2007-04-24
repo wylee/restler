@@ -1,13 +1,11 @@
 ## edit.html
 <%inherit file="layout.html" />
 <%
-    url_args = {'id': c.member.id}
+    # PUT to member URL
+    url_args = {'controller': c.controller, 'action': 'update', 'id': c.member.id}
     if c.is_nested:
-        url_text = c.parent_member_name + '_' + c.member_name
         url_args[c.parent_id_name] = c.parent_id
-    else:
-        url_text = c.member_name
 %>
-${h.form(h.url_for(url_text, **url_args), method='PUT')}
+${h.form(h.url_for(**url_args), method='PUT')}
     <%include file='_form.html' />
 ${h.end_form()}

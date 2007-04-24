@@ -61,8 +61,8 @@ small_int_types = (types.SMALLINT, types.SmallInteger,
 int_types = (types.INT, types.INTEGER, types.Integer)
 
 
-def make_nav_menu(context, id='nav', menu_class='menu'):
-    lists = nav_list_for_resource(context)
+def make_nav_menu(c, id='nav', menu_class='menu'):
+    lists = nav_list_for_resource(c)
     return make_nav_list(lists, id, menu_class)
 
 
@@ -95,66 +95,54 @@ def make_nav_list(lists, id='nav', menu_class='menu'):
     return ''.join(result)
 
 
-def nav_list_for_resource(context):
+def nav_list_for_resource(c):
     lists = []
-    if context.is_nested:
-        parent = context.parent
-        p_name = context.parent_member_name
+    controller = c.controller
+    if c.is_nested:
+        parent = c.parent
+        p_name = c.parent_member_name
         p_link_text = 'Up to Parent %s' % p_name.title()
-        url_args = {'id': parent.id}
-        gp_m_name = context.grandparent_member_name
+        url_args = {'controller': controller, 'id': parent.id}
+        gp_m_name = c.grandparent_member_name
         if gp_m_name:
             gp_id_name = '%s_id' % gp_m_name
-            p_url = '%s_%s' % (gp_m_name, p_name)
             grandparent_id = getattr(parent, gp_id_name)
             url_args[gp_id_name] = grandparent_id
-        else:
-            p_url = p_name
-        lists.append([{'a': link_to(p_link_text, url(p_url, **url_args))}])
-        url_args = {'parent_name': p_name, 'parent_id': parent.id}
+        lists.append([{'a': link_to(p_link_text, url(**url_args))}])
+        nav_list_args = {'parent_name': p_name, 'parent_id': parent.id}
     else:
-        url_args = {}
-    m_name = context.member_name
-    c_name = context.collection_name
-    member = context.member
-    resource_list = nav_list_for_collection(m_name, c_name, **url_args)
-    if context.action != 'new' and member:
-        resource_list += nav_list_for_member(m_name, member.id, **url_args)
+        nav_list_args = {}
+    m_name = c.member_name
+    member = c.member
+    resource_list = nav_list_for_collection(m_name, controller,
+                                            **nav_list_args)
+    if c.action != 'new' and member:
+        m_list = nav_list_for_member(m_name, controller, member.id,
+                                     **nav_list_args)
+        resource_list += m_list
     lists.append(resource_list)
     return lists
 
 
-def nav_list_for_collection(member_name, collection_name, parent_name=None,
+def nav_list_for_collection(member_name, controller, parent_name=None,
                             parent_id=None):
+    url_args = {'controller': controller, 'id': None}
     if parent_name is not parent_id is not None:
-        url_args = {'%s_id' % parent_name: parent_id}
-        list_url = '%s_%s' % (parent_name, collection_name)
-        new_url = '%s_new_%s' % (parent_name, member_name)
-    else:
-        url_args = {}
-        list_url = '%s' % collection_name
-        new_url = 'new_%s' % member_name
+        url_args['%s_id' % parent_name] = parent_id
     list_link_text = '%s List' % member_name.title()
     new_link_text = 'New %s' % member_name.title()
     return [
-        {'a': link_to(list_link_text, url(list_url, **url_args))},
-        {'a': link_to(new_link_text, url(new_url, **url_args))},
+        {'a': link_to(list_link_text, url(**url_args))},
+        {'a': link_to(new_link_text, url(action='new', **url_args))},
     ]
 
 
-def nav_list_for_member(member_name, member_id, parent_name=None,
-                        parent_id=None, terse_link_text=False,
-                        join_with=None):
+def nav_list_for_member(member_name, controller, member_id,
+                        parent_name=None, parent_id=None,
+                        terse_link_text=False, join_with=None):
+    url_args = {'controller': controller, 'id': member_id}
     if parent_name is not parent_id is not None:
-        url_args = {'id': member_id, '%s_id' % parent_name: parent_id}
-        show_url = '%s_%s' % (parent_name, member_name)
-        edit_url = '%s_edit_%s' % (parent_name, member_name)
-        delete_url = '%s_%s' % (parent_name, member_name)
-    else:
-        url_args = {'id': member_id}
-        show_url = '%s' % member_name
-        edit_url = 'edit_%s' % member_name
-        delete_url = '%s' % member_name
+        url_args['%s_id' % parent_name] = parent_id
     m_name_title = member_name.title()
     if terse_link_text:
         show_link_text = 'Show'
@@ -165,12 +153,13 @@ def nav_list_for_member(member_name, member_id, parent_name=None,
         edit_link_text = 'Edit %s' % m_name_title
         delete_link_text = 'Delete %s' % m_name_title
     links = [
-        {'a': link_to(show_link_text, url(show_url, **url_args),
+        {'a': link_to(show_link_text, url(action='show', **url_args),
                       title='Show %s details' % member_name)},
-        {'a': link_to(edit_link_text, url(edit_url, **url_args),
+        {'a': link_to(edit_link_text, url(action='edit', **url_args),
                       title='Edit %s details' % member_name)},
-        {'a': button_to(delete_link_text, url(delete_url, **url_args),
-                        method='DELETE', confirm='Really delete this item?',
+        {'a': button_to(delete_link_text, url(action='delete', **url_args),
+                        method='DELETE',
+                        confirm='Really delete this item?',
                         title='Remove %s from database' % member_name)},
     ]
     if join_with is not None:
