@@ -435,23 +435,23 @@ def BaseController(the_model, the_parent_model=None):
         def _get_json_content(self, block=None):
             """Get a JSON string and mimetype "text/javascript".
 
-            Assumes members have a ``__simplify__`` method that returns an
+            Assumes members have a ``to_builtin`` method that returns an
             object that can be JSONified by the ``simplejson module``. That
             object is JSONified and returned unless the ``block`` arg is
             supplied.
 
             ``block``
                 This method creates the simplest possible object to be
-                JSONified (``obj``) by calling ``__simplify__`` on a member or
+                JSONified (``obj``) by calling ``to_builtin`` on a member or
                 members. If a function is passed via ``block``, that function
                 will be called with ``obj``, and ``obj`` can be modified there
                 before being JSONified here.
 
             """
             if self.collection is not None:
-                obj = [m.__simplify__() for m in self.collection]
+                obj = [m.to_builtin() for m in self.collection]
             elif self.member is not None:
-                obj = self.member.__simplify__()
+                obj = self.member.to_builtin()
             else:
                 obj = None
             if block is not None:
