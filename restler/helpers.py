@@ -100,8 +100,9 @@ def nav_list_for_resource(c):
     lists = []
     controller = c.controller
     if c.is_nested:
-        lists += nav_list_for_parent(c)
-        nav_list_args = {'parent_name': p_name, 'parent_id': parent.id}
+        lists.append(nav_list_for_parent(c))
+        nav_list_args = {'parent_name': c.parent_member_name,
+                         'parent_id': c.parent.id}
     else:
         nav_list_args = {}
     m_name = c.member_name

@@ -20,3 +20,10 @@ SVN
   using `map.connect`) without names. Although this sounds harder to do (it's
   a little more manual), I was able to move several lines of code and some
   superfluous logic. (wlb 2007-04-23)
+* Updated `_get_json_content` to use `to_builtin` instead of `__simplify__` 
+  (wlb 2007-04-26)
+* Fixed some bugs in helper `nav_list_for_resource` relating to parent args for
+  nav list creation: 1) When I factored out `nav_list_for_parent`, some vars 
+  were moved that were still being referenced 2) The parent list was being
+  *added* to the result list instead of *appended* (wlb 2007-04-27)
+
