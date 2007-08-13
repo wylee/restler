@@ -13,14 +13,14 @@ connectivity as long as a few simple rules are followed.
 The Restler project is now hosted at Google Code. Please see
 http://code.google.com/p/restler/ for more details, documentation, etc.
 
-Restler was extracted from the byCycle.org Trip Planner
+Restler was extracted from the byCycle Trip Planner
 (http://tripplanner.bycycle.org).
 
 """,
     license='BSD/MIT',
     author='Wyatt L Baldwin, byCycle.org',
     author_email='wyatt@byCycle.org',
-    keywords='web pylons REST',
+    keywords='web pylons controller REST WSGI',
     url='http://code.google.com/p/restler/',
     classifiers=[
         'Development Status :: 3 - Alpha',
@@ -36,7 +36,8 @@ Restler was extracted from the byCycle.org Trip Planner
     include_package_data=True,
     zip_safe=False,
     install_requires=(
-        'Elixir>=0.3.0',
+        'SQLAlchemy==0.3.8',
+        'Elixir==0.3.0',
         'simplejson>=1.7.1',
         ),
     test_suite = 'nose.collector',

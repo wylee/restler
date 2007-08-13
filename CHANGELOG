@@ -1,4 +1,5 @@
 SVN
+* 2007-08-13 -- Removed the MyProject sample Pylons project
 * Extracted from byCycle repo at r776 and moved to Google Code
 * Removed `execfile` wonkiness in favor of importing restler then calling its
   new `init_model` function (wlb 2007-04-17)
