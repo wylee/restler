@@ -18,8 +18,8 @@ Restler was extracted from the byCycle Trip Planner
 
 """,
     license='BSD/MIT',
-    author='Wyatt L Baldwin, byCycle.org',
-    author_email='wyatt@byCycle.org',
+    author='Wyatt L Baldwin',
+    author_email='self@wyattbaldwin.com',
     keywords='web pylons controller REST WSGI',
     url='http://code.google.com/p/restler/',
     classifiers=[
@@ -38,7 +38,7 @@ Restler was extracted from the byCycle Trip Planner
     install_requires=(
         'SQLAlchemy==0.3.8',
         'Elixir==0.3.0',
-        'simplejson>=1.7.1',
+        'simplejson==1.7.1',
         ),
     test_suite = 'nose.collector',
 )
