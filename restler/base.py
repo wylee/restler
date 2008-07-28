@@ -4,15 +4,19 @@ from pylons import request
 from pylons import tmpl_context as c
 from pylons.controllers import WSGIController
 from pylons.controllers.util import abort, redirect_to
+from pylons.decorators import jsonify
 from pylons.templating import render_mako as render
 
-from mako.exceptions import TopLevelLookupException
+import mako
 
 
 log = logging.getLogger(__name__)
 
+TemplateNotFoundExceptions = (mako.exceptions.TopLevelLookupException,)
+
 
 def RestController(the_model):
+    """Return a ``RestController`` that's aware of a particular model."""
     class RestController(_RestController):
         model = the_model
     return RestController
@@ -121,16 +125,45 @@ class _RestController(WSGIController):
     def _redirect_to_collection(self):
         redirect_to('admin_%s' % c.collection_name)
 
-    def _render(
+    def _render(self, *args, **kwargs):
+        format = c.format or 'html'
+        render = getattr(self, '_render_%s' % format, _render_html)
+        return render(*args, **kwargs)
+
+    def _render_html(
         self, controller=None, action=None, format=None, namespace=None):
         template = '/%%s/%s.%s' % (action or c.action, format or c.format)
         try:
             template_name = template % (controller or c.controller)
             return render(template_name)
-        except TopLevelLookupException:
+        except TemplateNotFoundExceptions:
             if namespace is not None:
                 template = '%s/%s' % (namespace, template)
             template_name = template % 'default'
             return render(template_name)
         finally:
             log.debug('(_render) template: %s' % template_name)
+
+    def _render_json(self, block=None):
+        if c.collection is not None:
+            obj = [member.to_builtin() for member in self.collection]
+        elif c.member is not None:
+            obj = c.member.to_builtin()
+        else:
+            obj = None
+        return self._render_obj_as_json(obj, block)
+
+    @jsonify
+    def _render_object_as_json(self, obj, block=None):
+        """Render an object in JSON format with content type of text/json.
+
+        ``obj`` must be JSONifiable by the simplejson module.
+
+        The final output of this method is returned by the ``jsonify``
+        decorator, which creates a proper JSON response with the correct
+        content type.
+
+        """
+        if block is not None:
+            obj = block(obj)
+        return obj
