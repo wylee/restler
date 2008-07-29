@@ -127,7 +127,7 @@ class _RestController(WSGIController):
 
     def _render(self, *args, **kwargs):
         format = c.format or 'html'
-        render = getattr(self, '_render_%s' % format, _render_html)
+        render = getattr(self, '_render_%s' % format, self._render_html)
         return render(*args, **kwargs)
 
     def _render_html(
