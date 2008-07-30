@@ -38,6 +38,9 @@ class _RestController(WSGIController):
 
         log.debug(route_info)
 
+        c.path = request.environ['PATH_INFO']
+        log.debug('Path: %s' % c.path)
+
         member_name = route.member_name
         log.debug('Member name: %s' % member_name)
 
