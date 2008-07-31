@@ -81,13 +81,13 @@ class _RestController(WSGIController):
         self._set_member()
         self._update_member_with_params()
         self.model.Session.add(c.member)
-        self.model.Session.flush([c.member])
+        self.model.Session.flush()
         self._redirect_to_member()
 
     def update(self, id):
         self._set_member(id)
         self._update_member_with_params()
-        self.model.Session.flush([c.member])
+        self.model.Session.flush()
         self._redirect_to_member()
 
     def delete(self, id):
