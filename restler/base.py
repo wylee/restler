@@ -30,7 +30,8 @@ class _RestController(WSGIController):
             return super(_RestController, self).__call__(
                 environ, start_response)
         finally:
-            self.model.clear_session()
+            log.debug('Removing Session...')
+            self.model.Session.remove()
 
     def __before__(self, *args, **kwargs):
         route = request.environ['routes.route']
