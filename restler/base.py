@@ -56,6 +56,9 @@ class _RestController(WSGIController):
 
         c.Entity = getattr(self.model, entity_name)
 
+        c.member = None
+        c.collection = None
+
         c.member_name = c.Entity.member_name
         c.member_title = c.Entity.member_title
 
@@ -150,18 +153,23 @@ class _RestController(WSGIController):
 
     def _render_json(self, block=None):
         if c.collection is not None:
-            obj = [member.to_builtin() for member in self.collection]
+            obj = [member.to_simple_object() for member in c.collection]
         elif c.member is not None:
-            obj = c.member.to_builtin()
+            obj = c.member.to_simple_object()
         else:
             obj = None
-        return self._render_obj_as_json(obj, block)
+        return self._render_object_as_json(obj, block)
 
     @jsonify
     def _render_object_as_json(self, obj, block=None):
         """Render an object in JSON format with content type of text/json.
 
-        ``obj`` must be JSONifiable by the simplejson module.
+        ``obj`` must be JSONifiable by the simplejson module. It will be
+        wrapped as {result: obj} to avoid JSON Array exploits.
+
+        ``block`` can be passed to modify or wrap the object before JSONifying
+        it. In this case the wrapping discussed above under ``obj`` won't
+        happen.
 
         The final output of this method is returned by the ``jsonify``
         decorator, which creates a proper JSON response with the correct
@@ -170,4 +178,6 @@ class _RestController(WSGIController):
         """
         if block is not None:
             obj = block(obj)
+        else:
+            obj = dict(result=obj)
         return obj
