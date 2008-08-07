@@ -133,12 +133,25 @@ class _RestController(WSGIController):
         redirect_to('admin_%s' % c.collection_name)
 
     def _render(self, *args, **kwargs):
-        format = c.format or 'html'
-        render = getattr(self, '_render_%s' % format, self._render_html)
+        format = kwargs.get('format', c.format or 'html')
+        kwargs['format'] = format
+        render = getattr(self, '_render_%s' % format, self._render_template)
         return render(*args, **kwargs)
 
-    def _render_html(
+    def _render_template(
         self, controller=None, action=None, format=None, namespace=None):
+        """By default, render template /{controller}/{action}.{format}.
+
+        This is the default rendering method, used when a specific
+        ``render_<format>`` method doesn't exist. Templates can be any
+        text-based template--HTML, text, XML, etc.
+
+        Typically, args are set in the environment (on ``c``), except
+        ``namespace``. Args passed explicitly will override args set in the
+        env. If ``namespace`` is given, the template rendered will be
+        /namespace/{controller}/{action}.{format}.
+
+        """
         template = '/%%s/%s.%s' % (action or c.action, format or c.format)
         try:
             template_name = template % (controller or c.controller)
@@ -152,6 +165,7 @@ class _RestController(WSGIController):
             log.debug('(_render) template: %s' % template_name)
 
     def _render_json(self, block=None):
+        """Render a JSON response from simplified ``member``s."""
         if c.collection is not None:
             obj = [member.to_simple_object() for member in c.collection]
         elif c.member is not None:
