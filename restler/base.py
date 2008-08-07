@@ -164,7 +164,7 @@ class _RestController(WSGIController):
         finally:
             log.debug('(_render) template: %s' % template_name)
 
-    def _render_json(self, block=None):
+    def _render_json(self, block=None, **kwargs):
         """Render a JSON response from simplified ``member``s."""
         if c.collection is not None:
             obj = [member.to_simple_object() for member in c.collection]
