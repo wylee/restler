@@ -7,6 +7,8 @@ from pylons.controllers.util import abort, redirect_to
 from pylons.decorators import jsonify
 from pylons.templating import render_mako as render
 
+from sqlalchemy.orm.exc import NoResultFound
+
 import mako
 
 
@@ -114,11 +116,15 @@ class _RestController(WSGIController):
         setattr(c, c.collection_name, c.collection)
 
     def _get_entity_or_404(self, id):
+        # Try to find by primary key
         entity = self.model.Session.query(c.Entity).get(id)
+        # If that fails, try to find by slug
         if entity is None and hasattr(c.Entity, 'slug'):
-            entity = self.model.Session.query(c.Entity).filter_by(slug=id).one()
-        if entity is None:
-            abort(404, 'Member with ID "%s" not found' % id)
+            q = self.model.Session.query(c.Entity)
+            try:
+                entity = q.filter_by(slug=id).one()
+            except NoResultFound:
+                abort(404, 'Member with ID or slug "%s" was not found.' % id)
         return entity
 
     def _update_member_with_params(self):
