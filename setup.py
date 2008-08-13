@@ -36,7 +36,7 @@ Restler was extracted from the byCycle Trip Planner
     include_package_data=True,
     zip_safe=False,
     install_requires=(
-        'SQLAlchemy==0.3.8',
+        'SQLAlchemy==0.3.7',
         'Elixir==0.3.0',
         'simplejson==1.7.1',
         ),
