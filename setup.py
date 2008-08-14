@@ -3,7 +3,7 @@ from setuptools import setup, find_packages
 
 setup(
     name='Restler',
-    version='0.1.1',
+    version='0.1.1.1',
     description='RESTful base controller for Pylons',
     long_description="""\
 Restler is a controller for Pylons projects that provides a set of default
@@ -38,7 +38,7 @@ Restler was extracted from the byCycle Trip Planner
     install_requires=(
         'SQLAlchemy==0.3.7',
         'Elixir==0.3.0',
-        'simplejson==1.7.1',
+        'simplejson>=1.9.2',
         ),
     test_suite = 'nose.collector',
 )
