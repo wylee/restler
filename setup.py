@@ -13,6 +13,10 @@ connectivity as long as a few simple rules are followed.
 The Restler project is now hosted at Google Code. Please see
 http://code.google.com/p/restler/ for more details, documentation, etc.
 
+The maintenance branch for v0.1 can be found here:
+
+http://restler.googlecode.com/svn/branches/rb-0.1/#egg=Restler-dev-0.1
+
 Restler was extracted from the byCycle Trip Planner
 (http://tripplanner.bycycle.org).
 
