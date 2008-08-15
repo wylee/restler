@@ -10,10 +10,15 @@ RESTful base controller for Pylons 0.9.7 (no Elixir dependency; uses \
     long_description="""\
 Restler is a controller for Pylons projects that provides a set of default
 RESTful actions that can be overridden as needed. It also handles database
-connectivity as long as a few simple rules are followed.
+connectivity as long as a few simple rules are followed (0.1 only; ;not
+ported to 0.2 yet).
 
 The Restler project is hosted at Google Code. Please see
 http://code.google.com/p/restler/ for more details, documentation, etc.
+
+The latest development version can be found here:
+
+http://restler.googlecode.com/svn/trunk/#egg=Restler-dev
 
 Restler was originally extracted from the byCycle bicycle trip planner
 (http://bycycle.org).
@@ -43,3 +48,4 @@ Restler was originally extracted from the byCycle bicycle trip planner
     ),
     test_suite = 'nose.collector',
 )
+
