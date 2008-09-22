@@ -117,10 +117,15 @@ class _RestController(WSGIController):
 
     def _get_entity_or_404(self, id):
         # Try to find by primary key
-        entity = self.model.Session.query(c.Entity).get(id)
+        q = self.model.Session.query(c.Entity)
+        try:
+            int(id)
+        except ValueError:
+            entity = None
+        else:
+            entity = q.get(id)
         # If that fails, try to find by slug
         if entity is None and hasattr(c.Entity, 'slug'):
-            q = self.model.Session.query(c.Entity)
             try:
                 entity = q.filter_by(slug=id).one()
             except NoResultFound:
