@@ -1,7 +1,12 @@
 """Restler helper functions."""
-from webhelpers import link_to, button_to, url, tag
-from webhelpers import text_field, text_area, check_box
+from webhelpers.html.tags import link_to, text, textarea, checkbox
+from webhelpers.html.tools import button_to
+from webhelpers.html.builder import HTML
+
+from routes import url_for
+
 from sqlalchemy import types
+
 
 __all__ = [
     'make_nav_menu',
@@ -17,41 +22,41 @@ __all__ = [
 
 
 type_to_field = {
-    types.AbstractType: text_field,
-    types.BLOB: text_field,
-    types.BOOLEAN: check_box,
-    types.Binary: text_field,
-    types.Boolean: text_field,
-    types.CHAR: text_field,
-    types.CLOB: text_field,
-    types.DATE: text_field,
-    types.DATETIME: text_field,
-    types.DECIMAL: text_field,
-    types.Date: text_field,
-    types.DateTime: text_field,
-    types.FLOAT: text_field,
-    types.Float: text_field,
-    types.INT: text_field,
-    types.INTEGER: text_field,
-    types.Integer: text_field,
-    types.MutableType: text_field,
-    types.NCHAR: text_field,
-    types.NULLTYPE: text_field,
-    types.NullTypeEngine: text_field,
-    types.Numeric: text_field,
-    types.PickleType: text_field,
-    types.SMALLINT: text_field,
-    types.SmallInteger: text_field,
-    types.Smallinteger: text_field,
-    types.String: text_field,
-    types.TEXT: text_area,
-    types.TIME: text_field,
-    types.TIMESTAMP: text_field,
-    types.Time: text_field,
-    types.TypeDecorator: text_field,
-    types.TypeEngine: text_field,
-    types.Unicode: text_field,
-    types.VARCHAR: text_field,
+    types.AbstractType: text,
+    types.BLOB: text,
+    types.BOOLEAN: checkbox,
+    types.Binary: text,
+    types.Boolean: text,
+    types.CHAR: text,
+    types.CLOB: text,
+    types.DATE: text,
+    types.DATETIME: text,
+    types.DECIMAL: text,
+    types.Date: text,
+    types.DateTime: text,
+    types.FLOAT: text,
+    types.Float: text,
+    types.INT: text,
+    types.INTEGER: text,
+    types.Integer: text,
+    types.MutableType: text,
+    types.NCHAR: text,
+    types.NULLTYPE: text,
+    types.NullTypeEngine: text,
+    types.Numeric: text,
+    types.PickleType: text,
+    types.SMALLINT: text,
+    types.SmallInteger: text,
+    types.Smallinteger: text,
+    types.String: text,
+    types.TEXT: textarea,
+    types.TIME: text,
+    types.TIMESTAMP: text,
+    types.Time: text,
+    types.TypeDecorator: text,
+    types.TypeEngine: text,
+    types.Unicode: text,
+    types.VARCHAR: text,
 }
 max_cols = 40
 default_rows = 5
@@ -70,7 +75,7 @@ def make_nav_menu(c, id='nav', menu_class='menu'):
 def make_nav_list(lists, id='nav', menu_class='menu'):
     """Create a list of lists, where the inner list items are links.
 
-    ``lists``
+    ``lists``tag
         A list of lists of {a: link, **li_tag_attrs}
         E.g., [[{'a': '<a href="url">link</a>', attrs for <li>}, ...], ...]
 
@@ -90,7 +95,7 @@ def make_nav_list(lists, id='nav', menu_class='menu'):
                 item['class_'] = (item.get('class_', '') + ' first').strip()
             if i == last:
                 item['class_'] = (item.get('class_', '') + ' last').strip()
-            result += [tag('li', open=True, **item), a, '</li>']
+            result += [HTML.tag('li', **item), a, '</li>']
         result += ['</ul>', '</li>']
     result.append('</ul>')
     return ''.join(result)
@@ -188,23 +193,23 @@ def form_field_for_col(col, member, **kw):
     col_name = col.key
     col_type = col.type
     value = getattr(member, col_name, '')
-    field_maker = type_to_field.get(col_type, text_field)
+    field_maker = type_to_field.get(col_type, text)
     field_args = {}
     length = getattr(col_type, 'length', 0)
-    if (field_maker is text_field and
+    if (field_maker is text and
         isinstance(col_type, string_types) and
         (length > max_cols or length is None)):
-        field_maker = text_area
-    if field_maker is text_field:
+        field_maker = textarea
+    if field_maker is text:
         if isinstance(col_type, string_types):
             field_args['size'] = min(max_cols, length) or max_cols
         elif isinstance(col_type, int_types):
             field_args['size'] = 10
         elif isinstance(col_type, small_int_types):
             field_args['size'] = 5
-    elif field_maker is text_area:
+    elif field_maker is textarea:
         field_args.update({'rows': default_rows, 'cols': max_cols})
-    elif field_maker is check_box:
+    elif field_maker is checkbox:
         if isinstance(col_type, types.BOOLEAN):
             field_args['checked'] = value
     # User's args override any args calculated here

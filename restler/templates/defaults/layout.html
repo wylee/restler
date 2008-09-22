@@ -7,7 +7,7 @@
     <title>${self.title()}</title>
     <meta name="keywords" content="Pylons, Admin"/>
     <meta name="description" content="Pylons Admin"/>
-    ${h.stylesheet_link_tag('restler.css')}
+    ${h.stylesheet_link('/stylesheets/restler.css')}
   </head>
 
   <body>
@@ -42,7 +42,7 @@
       <div id="powered-by">
         <a href="http://pylonshq.com/"
            title="Powered by Pylons"
-           >${h.image_tag('powered_by.png', alt='Now powered by Pylons')}</a>
+           >${h.image('powered_by.png', alt='Now powered by Pylons')}</a>
       </div>      
     </div>
   </body>
@@ -56,5 +56,5 @@
 </%def>
 <%def name="header()"></%def>
 <%def name="nav()">${h.make_nav_menu(c)}</%def>
-<%def name="footer()">&copy; 2007 ${h.link_to('Wyatt Baldwin', 'http://wyattbaldwin.com/')}</%def>
+<%def name="footer()">&copy; 2007-2008 ${h.link_to('Wyatt Baldwin', 'http://wyattbaldwin.com/')}</%def>
 <%def name="meta_bottom()"></%def>
