@@ -3,7 +3,7 @@ from setuptools import setup, find_packages
 
 setup(
     name='Restler',
-    version='0.2a11',
+    version='0.2a12',
     description="""\
 RESTful base controller for Pylons 0.9.7 (no Elixir dependency; uses \
 "straight" SQLAlchemy)""",
@@ -32,7 +32,7 @@ Restler was originally extracted from the byCycle bicycle trip planner
     classifiers=[
         'Development Status :: 3 - Alpha',
         'Environment :: Web Environment',
-        'Framework :: Paste',
+        'Framework :: Pylons',
         'Intended Audience :: Developers',
         'License :: OSI Approved :: BSD License',
         'License :: OSI Approved :: MIT License',
