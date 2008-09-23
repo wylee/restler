@@ -1,6 +1,6 @@
 import logging
 
-from pylons import request
+from pylons import request, response
 from pylons import tmpl_context as c
 from pylons.controllers import WSGIController
 from pylons.controllers.util import abort, redirect_to
@@ -50,7 +50,7 @@ class _RestController(WSGIController):
         entity_name = member_name.replace('_', ' ').title().replace(' ', '')
         log.debug('Entity name: %s' % entity_name)
 
-        c.format = kwargs.get('format', 'html')
+        c.format = request.params.get('format', kwargs.get('format', 'html'))
         log.debug('Output format: %s' % c.format)
 
         c.controller = route_info['controller']
@@ -58,14 +58,14 @@ class _RestController(WSGIController):
 
         c.Entity = getattr(self.model, entity_name)
 
-        c.member = None
-        c.collection = None
-
         c.member_name = c.Entity.member_name
         c.member_title = c.Entity.member_title
 
         c.collection_name = c.Entity.collection_name
         c.collection_title = c.Entity.collection_title
+
+        c.member = None
+        c.collection = None
 
         self._set_wrap()
 
@@ -148,7 +148,10 @@ class _RestController(WSGIController):
     def _render(self, *args, **kwargs):
         format = kwargs.get('format', c.format or 'html')
         kwargs['format'] = format
+        kwargs['action'] = kwargs.get('action', c.action)
         render = getattr(self, '_render_%s' % format, self._render_template)
+        log.debug('Render method: %s' % render.__name__)
+        response.status = kwargs.pop('code', 200)
         return render(*args, **kwargs)
 
     def _render_template(
@@ -177,35 +180,47 @@ class _RestController(WSGIController):
         finally:
             log.debug('(_render) template: %s' % template_name)
 
-    def _render_json(self, block=None, **kwargs):
+    def _render_json(self, action=None, block=None, **kwargs):
         """Render a JSON response from simplified ``member``s."""
-        if c.collection is not None:
-            obj = [member.to_simple_object() for member in c.collection]
-        elif c.member is not None:
-            obj = c.member.to_simple_object()
-        else:
-            obj = None
-        return self._render_object_as_json(obj, block)
+        obj = self._get_json_object(action=action, block=block)
+        return self._render_object_as_json(obj)
 
     @jsonify
-    def _render_object_as_json(self, obj, block=None):
+    def _render_object_as_json(self, obj):
         """Render an object in JSON format with content type of text/json.
 
-        ``obj`` must be JSONifiable by the simplejson module. It will be
-        wrapped as {result: obj} to avoid JSON Array exploits.
-
-        ``block`` can be passed to modify or wrap the object before JSONifying
-        it. In this case the wrapping discussed above under ``obj`` won't
-        happen.
+        ``obj`` must be JSONifiable by the simplejson module.
 
         The final output of this method is returned by the ``jsonify``
         decorator, which creates a proper JSON response with the correct
         content type.
 
         """
+        return obj
+
+    def _get_json_object(self, action=None, wrap=True, block=None):
+        """Get JSON object for current request.
+
+        ``wrap``
+             If set, the output will be wrapped as {result: obj} to avoid JSON
+             Array exploits.
+
+        ``block``
+            Can be passed to modify or wrap the object before JSONifying it.
+            In this case the wrapping discussed above under ``obj`` won't
+            happen.
+
+        """
+        if c.collection is not None:
+            obj = [member.to_simple_object() for member in c.collection]
+        elif c.member is not None:
+            obj = c.member.to_simple_object()
+        else:
+            log.debug('Neither collection nor member was set.')
+            obj = None
         if block is not None:
             obj = block(obj)
-        else:
+        if wrap:
             obj = dict(result=obj)
         return obj
 
