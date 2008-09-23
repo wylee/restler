@@ -67,6 +67,8 @@ class _RestController(WSGIController):
         c.collection_name = c.Entity.collection_name
         c.collection_title = c.Entity.collection_title
 
+        self._set_wrap()
+
     def index(self):
         self._set_collection()
         return self._render()
@@ -206,3 +208,26 @@ class _RestController(WSGIController):
         else:
             obj = dict(result=obj)
         return obj
+
+    def _set_wrap(self, value=None):
+        """Set whether to wrap a template in its parent template.
+
+        If ``value`` is given, use that value. If ``wrap`` is set in
+        ``request.params``, convert its value to ``bool`` and use that
+        value. Otherwise, set ``self.wrap`` to True.
+
+        ``value``
+            ``bool`` indicating whether or not a template should be
+            wrapped in its inherited templates. ``wrap`` gets passed along
+            to the template, which can decide to do whatever it wants with
+            it.
+
+        """
+        if value is not None:
+            c.wrap = value
+        else:
+            wrap = request.params.get('wrap', 'true').strip().lower()
+            if wrap in ('0', 'n', 'no', 'false', 'nil'):
+                c.wrap = False
+            else:
+                c.wrap = True
