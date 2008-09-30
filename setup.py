@@ -3,14 +3,14 @@ from setuptools import setup, find_packages
 
 setup(
     name='Restler',
-    version='0.2a13',
+    version='0.2a14',
     description="""\
 RESTful base controller for Pylons 0.9.7 (no Elixir dependency; uses \
 "straight" SQLAlchemy)""",
     long_description="""\
 Restler is a controller for Pylons projects that provides a set of default
 RESTful actions that can be overridden as needed. It also handles database
-connectivity as long as a few simple rules are followed (0.1 only; ;not
+connectivity as long as a few simple rules are followed (0.1 only; not
 ported to 0.2 yet).
 
 The Restler project is hosted at Google Code. Please see
@@ -45,7 +45,7 @@ Restler was originally extracted from the byCycle bicycle trip planner
     install_requires=(
         'SQLAlchemy>=0.5rc1',
         'WebHelpers>=0.6.1',
-        'simplejson>=1.9.2',
+        'simplejson>=2.0.1',
     ),
     test_suite = 'nose.collector',
 )
