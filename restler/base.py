@@ -18,7 +18,7 @@ TemplateNotFoundExceptions = (mako.exceptions.TopLevelLookupException,)
 
 
 def RestController(the_model):
-    """Return a ``RestController`` that's aware of a particular model."""
+    """Return a ``RestController`` class that's aware of a particular model."""
     class RestController(_RestController):
         model = the_model
     return RestController
@@ -35,14 +35,14 @@ class _RestController(WSGIController):
             log.debug('Removing Session...')
             self.model.Session.remove()
 
-    def __before__(self, *args, **kwargs):
+    def __init__(self, *args, **kwargs):
         route = request.environ['routes.route']
         route_info = request.environ['pylons.routes_dict']
 
         log.debug(route_info)
 
-        c.path = request.environ['PATH_INFO']
-        log.debug('Path: %s' % c.path)
+        self.path = request.environ['PATH_INFO']
+        log.debug('Path: %s' % self.path)
 
         member_name = route.member_name
         log.debug('Member name: %s' % member_name)
@@ -50,76 +50,86 @@ class _RestController(WSGIController):
         entity_name = member_name.replace('_', ' ').title().replace(' ', '')
         log.debug('Entity name: %s' % entity_name)
 
-        c.format = request.params.get('format', kwargs.get('format', 'html'))
-        log.debug('Output format: %s' % c.format)
+        self.format = request.params.get('format', kwargs.get('format', 'html'))
+        log.debug('Output format: %s' % self.format)
 
-        c.controller = route_info['controller']
-        c.action = route_info['action']
+        self.controller = route_info['controller']
+        self.action = route_info['action']
 
-        c.Entity = getattr(self.model, entity_name)
+        self.Entity = getattr(self.model, entity_name)
 
-        c.member_name = c.Entity.member_name
-        c.member_title = c.Entity.member_title
+        self.member_name = self.Entity.member_name
+        self.member_title = self.Entity.member_title
 
-        c.collection_name = c.Entity.collection_name
-        c.collection_title = c.Entity.collection_title
+        self.collection_name = self.Entity.collection_name
+        self.collection_title = self.Entity.collection_title
 
-        c.member = None
-        c.collection = None
+        self.member = None
+        self.collection = None
 
         self._set_wrap()
 
+        self._init_properties()
+
     def index(self):
-        self._set_collection()
+        self.set_collection_by_ids()
         return self._render()
 
     def show(self, id):
-        self._set_member(id)
+        self.set_member_by_id(id)
         return self._render()
 
     def new(self):
-        self._set_member()
+        self.set_member_by_id()
         return self._render()
 
     def edit(self, id):
-        self._set_member(id)
+        self.set_member_by_id(id)
         return self._render()
 
     def create(self):
-        self._set_member()
+        self.set_member_by_id()
         self._update_member_with_params()
-        self.model.Session.add(c.member)
+        self.model.Session.add(self.member)
         self.model.Session.flush()
         self._redirect_to_member()
 
     def update(self, id):
-        self._set_member(id)
+        self.set_member_by_id(id)
         self._update_member_with_params()
         self.model.Session.flush()
         self._redirect_to_member()
 
     def delete(self, id):
-        self._set_member(id)
-        self.model.Session.delete(c.member)
+        self.set_member_by_id(id)
+        self.model.Session.delete(self.member)
         self.model.Session.flush()
         self._redirect_to_collection()
 
-    def _set_member(self, id=None):
+    def set_member_by_id(self, id=None):
         if id is None:
-            member = c.Entity()
+            member = self.Entity()
         else:
-            member = self._get_entity_or_404(id)
-        c.member = member
-        setattr(c, c.member_name, member)
+            member = self.get_entity_or_404(id)
+        self.member = member
 
-    def _set_collection(self):
-        collection = self.model.Session.query(c.Entity).all()
-        c.collection = collection
-        setattr(c, c.collection_name, c.collection)
+    _set_member = set_member_by_id
 
-    def _get_entity_or_404(self, id):
+    def set_collection_by_ids(self, ids=None):
+        q = self.model.Session.query(self.Entity)
+        if ids is not None:
+            q = q.filter(self.Entity.id.in_(ids))
+        else:
+            # TODO: Allow pagination. If pagination params aren't set then we'd
+            # just fall through to getting the entire collection.
+            pass
+        self.collection = q.all()
+
+    _set_collection = set_collection_by_ids
+
+    def get_entity_or_404(self, id):
         # Try to find by primary key
-        q = self.model.Session.query(c.Entity)
+        q = self.model.Session.query(self.Entity)
         try:
             int(id)
         except ValueError:
@@ -127,28 +137,30 @@ class _RestController(WSGIController):
         else:
             entity = q.get(id)
         # If that fails, try to find by slug
-        if entity is None and hasattr(c.Entity, 'slug'):
+        if entity is None and hasattr(self.Entity, 'slug'):
             try:
                 entity = q.filter_by(slug=id).one()
             except NoResultFound:
                 abort(404, 'Member with ID or slug "%s" was not found.' % id)
         return entity
 
+    _get_entity_or_404 = get_entity_or_404
+
     def _update_member_with_params(self):
         params = request.params
         for name in params:
-            setattr(c.member, name, params[name])
+            setattr(self.member, name, params[name])
 
     def _redirect_to_member(self):
-        redirect_to('admin_%s' % c.member_name, id=c.member.id)
+        redirect_to(self.member_name, id=self.member.id)
 
     def _redirect_to_collection(self):
-        redirect_to('admin_%s' % c.collection_name)
+        redirect_to(self.collection_name)
 
     def _render(self, *args, **kwargs):
-        format = kwargs.get('format', c.format or 'html')
+        format = kwargs.get('format', self.format or 'html')
         kwargs['format'] = format
-        kwargs['action'] = kwargs.get('action', c.action)
+        kwargs['action'] = kwargs.get('action', self.action)
         render = getattr(self, '_render_%s' % format, self._render_template)
         log.debug('Render method: %s' % render.__name__)
         response.status = kwargs.pop('code', 200)
@@ -168,9 +180,9 @@ class _RestController(WSGIController):
         /namespace/{controller}/{action}.{format}.
 
         """
-        template = '/%%s/%s.%s' % (action or c.action, format or c.format)
+        template = '/%%s/%s.%s' % (action or self.action, format or self.format)
         try:
-            template_name = template % (controller or c.controller)
+            template_name = template % (controller or self.controller)
             return render(template_name)
         except TemplateNotFoundExceptions:
             if namespace is not None:
@@ -211,10 +223,10 @@ class _RestController(WSGIController):
             happen.
 
         """
-        if c.collection is not None:
-            obj = [member.to_simple_object() for member in c.collection]
-        elif c.member is not None:
-            obj = c.member.to_simple_object()
+        if self.collection is not None:
+            obj = [member.to_simple_object() for member in self.collection]
+        elif self.member is not None:
+            obj = self.member.to_simple_object()
         else:
             log.debug('Neither collection nor member was set.')
             obj = None
@@ -224,6 +236,8 @@ class _RestController(WSGIController):
             obj = dict(result=obj)
         return obj
 
+    def _get_wrap(self):
+        return self._wrap
     def _set_wrap(self, value=None):
         """Set whether to wrap a template in its parent template.
 
@@ -239,10 +253,45 @@ class _RestController(WSGIController):
 
         """
         if value is not None:
-            c.wrap = value
+            self._wrap = value
         else:
             wrap = request.params.get('wrap', 'true').strip().lower()
             if wrap in ('0', 'n', 'no', 'false', 'nil'):
-                c.wrap = False
+                self._wrap = False
             else:
-                c.wrap = True
+                self._wrap = True
+    wrap = property(_get_wrap, _set_wrap)
+
+    def __setattr__(self, name, value):
+        """Set attribute on both ``self`` and ``c``."""
+        if isinstance(getattr(self.__class__, name, None), property):
+            # I.e., just call the property's _set method
+            super(_RestController, self).__setattr__(name, value)
+        else:
+            self._set_property([name], value)
+
+    def _set_property(self, names, value):
+        """Set attributes on both ``self`` and ``c``."""
+        for name in names:
+            self.__dict__[name] = value
+            # Don't put "private" names in the template context
+            if not name.startswith('_'):
+                setattr(c, name, value)
+
+    def _p_get_collection(self):
+        return self.__dict__.get('collection', None)
+    def _p_set_collection(self, collection):
+        self._set_property(
+            ['collection', self.collection_name], collection)
+    collection = property(_p_get_collection, _p_set_collection)
+
+    def _p_get_member(self):
+        return self.__dict__.get('member', None)
+    def _p_set_member(self, member):
+        self._set_property(['member', self.member_name], member)
+    member = property(_p_get_member, _p_set_member)
+
+    def _init_properties(self):
+        cls = self.__class__
+        setattr(cls, self.collection_name, cls.collection)
+        setattr(cls, self.member_name, cls.member)
