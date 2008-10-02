@@ -35,7 +35,7 @@ class _RestController(WSGIController):
             log.debug('Removing Session...')
             self.model.Session.remove()
 
-    def __init__(self, *args, **kwargs):
+    def __before__(self, *args, **kwargs):
         route = request.environ['routes.route']
         route_info = request.environ['pylons.routes_dict']
 
