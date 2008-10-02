@@ -3,7 +3,7 @@ from setuptools import setup, find_packages
 
 setup(
     name='Restler',
-    version='0.2a15',
+    version='0.2a16',
     description="""\
 RESTful base controller for Pylons 0.9.7 (no Elixir dependency; uses \
 "straight" SQLAlchemy)""",
