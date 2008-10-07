@@ -260,6 +260,7 @@ class _RestController(WSGIController):
                 self._wrap = False
             else:
                 self._wrap = True
+        c.wrap = self._wrap
     wrap = property(_get_wrap, _set_wrap)
 
     def __setattr__(self, name, value):
