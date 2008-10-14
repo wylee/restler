@@ -72,7 +72,14 @@ class _RestController(WSGIController):
         self._init_properties()
 
     def index(self):
-        self.set_collection_by_ids()
+        params = request.params
+        filters = params.keys()
+        not_filters = ['wrap', 'format']
+        filters = [p for p in params if p not in not_filters]
+        if filters:
+            self.set_collection_by_filters(params)
+        else:
+            self.set_collection_by_ids()
         return self._render()
 
     def show(self, id):
@@ -115,17 +122,24 @@ class _RestController(WSGIController):
 
     _set_member = set_member_by_id
 
+    # TODO: Allow pagination for collection methods. If pagination params
+    # aren't set then we'd just fall through to returning the entire
+    # collection.
+
     def set_collection_by_ids(self, ids=None):
         q = self.model.Session.query(self.Entity)
         if ids is not None:
             q = q.filter(self.Entity.id.in_(ids))
-        else:
-            # TODO: Allow pagination. If pagination params aren't set then we'd
-            # just fall through to getting the entire collection.
-            pass
         self.collection = q.all()
 
     _set_collection = set_collection_by_ids
+
+    def set_collection_by_filters(self, filters):
+        q = self.model.Session.query(self.Entity)
+        for col in filters:
+            val = filters[col]
+            q = q.filter_by(**{col: val})
+        self.collection = q.all()
 
     def get_entity_or_404(self, id):
         # Try to find by primary key
