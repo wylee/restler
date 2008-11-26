@@ -88,32 +88,32 @@ class _RestController(WSGIController):
         return self._render()
 
     def show(self, id):
-        self.set_member_by_id(id)
+        self.set_member(id)
         return self._render()
 
     def new(self):
-        self.set_member_by_id()
+        self.set_member()
         return self._render()
 
     def edit(self, id):
-        self.set_member_by_id(id)
+        self.set_member(id)
         return self._render()
 
     def create(self):
-        self.set_member_by_id()
+        self.set_member()
         self._update_member_with_params()
         self.Session.add(self.member)
         self.Session.flush()
         self._redirect_to_member()
 
     def update(self, id):
-        self.set_member_by_id(id)
+        self.set_member(id)
         self._update_member_with_params()
         self.Session.flush()
         self._redirect_to_member()
 
     def delete(self, id):
-        self.set_member_by_id(id)
+        self.set_member(id)
         self.Session.delete(self.member)
         self.Session.flush()
         self._redirect_to_collection()
