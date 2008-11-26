@@ -84,8 +84,6 @@ class _RestController(WSGIController):
             if name == 'filter_by':
                 filter_key = str(val)
                 filter_val = str(params[filter_key])
-                log.debug(filter_key)
-                log.debug(filter_val )
                 filters[filter_key] = filter_val
         if filters:
             self.set_collection_by_filters(filters)
