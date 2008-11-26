@@ -78,9 +78,15 @@ class _RestController(WSGIController):
 
     def index(self):
         params = request.params
-        filters = params.keys()
-        not_filters = ['wrap', 'format']
-        filters = dict([(p, params[p]) for p in params if p not in not_filters])
+        filters = {}
+        for name, val in params.items():
+            name = name.strip().lower()
+            if name == 'filter_by':
+                filter_key = str(val)
+                filter_val = str(params[filter_key])
+                log.debug(filter_key)
+                log.debug(filter_val )
+                filters[filter_key] = filter_val
         if filters:
             self.set_collection_by_filters(filters)
         else:
@@ -137,9 +143,9 @@ class _RestController(WSGIController):
 
     def set_collection_by_filters(self, filters):
         q = self.Session.query(self.Entity)
-        for col in filters:
-            val = filters[col]
-            q = q.filter_by(**{col: val})
+        for key in filters:
+            val = filters[key]
+            q = q.filter_by(**{key: val})
         self.collection = q.all()
 
     def get_entity_or_404(self, id):
