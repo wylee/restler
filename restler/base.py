@@ -33,7 +33,7 @@ class _RestController(WSGIController):
                 environ, start_response)
         finally:
             log.debug('Removing Session...')
-            self.model.Session.remove()
+            self.Session.remove()
 
     def __before__(self, *args, **kwargs):
         route = request.environ['routes.route']
@@ -58,6 +58,11 @@ class _RestController(WSGIController):
 
         self.Entity = getattr(self.model, entity_name)
 
+        if hasattr(self.Entity, 'Session'):
+            self.Session = self.Entity.Session
+        else:
+            self.Session = self.model.Session
+
         self.member_name = self.Entity.member_name
         self.member_title = self.Entity.member_title
 
@@ -75,11 +80,11 @@ class _RestController(WSGIController):
         params = request.params
         filters = params.keys()
         not_filters = ['wrap', 'format']
-        filters = [p for p in params if p not in not_filters]
+        filters = dict([(p, params[p]) for p in params if p not in not_filters])
         if filters:
-            self.set_collection_by_filters(params)
+            self.set_collection_by_filters(filters)
         else:
-            self.set_collection_by_ids()
+            self.set_collection()
         return self._render()
 
     def show(self, id):
@@ -97,45 +102,41 @@ class _RestController(WSGIController):
     def create(self):
         self.set_member_by_id()
         self._update_member_with_params()
-        self.model.Session.add(self.member)
-        self.model.Session.flush()
+        self.Session.add(self.member)
+        self.Session.flush()
         self._redirect_to_member()
 
     def update(self, id):
         self.set_member_by_id(id)
         self._update_member_with_params()
-        self.model.Session.flush()
+        self.Session.flush()
         self._redirect_to_member()
 
     def delete(self, id):
         self.set_member_by_id(id)
-        self.model.Session.delete(self.member)
-        self.model.Session.flush()
+        self.Session.delete(self.member)
+        self.Session.flush()
         self._redirect_to_collection()
 
-    def set_member_by_id(self, id=None):
+    def set_member(self, id=None):
         if id is None:
             member = self.Entity()
         else:
             member = self.get_entity_or_404(id)
         self.member = member
 
-    _set_member = set_member_by_id
-
     # TODO: Allow pagination for collection methods. If pagination params
     # aren't set then we'd just fall through to returning the entire
-    # collection.
+    # collection OR if the collection is huge, we might use defaults.
 
-    def set_collection_by_ids(self, ids=None):
-        q = self.model.Session.query(self.Entity)
+    def set_collection(self, ids=None):
+        q = self.Session.query(self.Entity)
         if ids is not None:
             q = q.filter(self.Entity.id.in_(ids))
         self.collection = q.all()
 
-    _set_collection = set_collection_by_ids
-
     def set_collection_by_filters(self, filters):
-        q = self.model.Session.query(self.Entity)
+        q = self.Session.query(self.Entity)
         for col in filters:
             val = filters[col]
             q = q.filter_by(**{col: val})
@@ -143,7 +144,7 @@ class _RestController(WSGIController):
 
     def get_entity_or_404(self, id):
         # Try to find by primary key
-        q = self.model.Session.query(self.Entity)
+        q = self.Session.query(self.Entity)
         try:
             int(id)
         except ValueError:
@@ -215,7 +216,7 @@ class _RestController(WSGIController):
     def _render_object_as_json(self, obj):
         """Render an object in JSON format with content type of text/json.
 
-        ``obj`` must be JSONifiable by the simplejson module.
+        ``obj`` must be JSONifiable by the (simple)json module.
 
         The final output of this method is returned by the ``jsonify``
         decorator, which creates a proper JSON response with the correct
