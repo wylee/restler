@@ -1,5 +1,7 @@
 import logging
 
+from paste.deploy.converters import asbool
+
 from pylons import request, response
 from pylons import tmpl_context as c
 from pylons.controllers import WSGIController
@@ -11,84 +13,52 @@ from sqlalchemy.orm.exc import NoResultFound
 
 import mako
 
+import simplejson as json
+
 
 log = logging.getLogger(__name__)
 
 TemplateNotFoundExceptions = (mako.exceptions.TopLevelLookupException,)
 
 
-def RestController(the_model):
-    """Return a ``RestController`` class that's aware of a particular model."""
-    class RestController(_RestController):
-        model = the_model
-    return RestController
+class Controller(WSGIController):
 
+    entity = None
+    """Entity class assocated with this controller."""
 
-class _RestController(WSGIController):
-    model = None
+    db_session = None
+    """Database session object used for queries against ``entity``."""
+
+    filter_params = {}
+    """Request param names with defaults, for filtering collections."""
+
+    filters = []
+    """SQLAlchemy filters--anything that could be an arg to `q.filter`."""
+
+    default_format = 'json'
 
     def __call__(self, environ, start_response):
         try:
-            return super(_RestController, self).__call__(
-                environ, start_response)
+            return super(Controller, self).__call__(environ, start_response)
         finally:
-            log.debug('Removing Session...')
-            self.Session.remove()
+            log.debug('Clearing database session...')
+            self.db_session.remove()
 
     def __before__(self, *args, **kwargs):
-        route = request.environ['routes.route']
         route_info = request.environ['pylons.routes_dict']
-
-        log.debug(route_info)
-
-        self.path = request.environ['PATH_INFO']
-        log.debug('Path: %s' % self.path)
-
-        member_name = route.member_name
-        log.debug('Member name: %s' % member_name)
-
-        entity_name = member_name.replace('_', ' ').title().replace(' ', '')
-        log.debug('Entity name: %s' % entity_name)
-
-        self.format = request.params.get('format', kwargs.get('format', 'html'))
-        log.debug('Output format: %s' % self.format)
-
         self.controller = route_info['controller']
         self.action = route_info['action']
-
-        self.Entity = getattr(self.model, entity_name)
-
-        if hasattr(self.Entity, 'Session'):
-            self.Session = self.Entity.Session
-        else:
-            self.Session = self.model.Session
-
-        self.member_name = self.Entity.member_name
-        self.member_title = self.Entity.member_title
-
-        self.collection_name = self.Entity.collection_name
-        self.collection_title = self.Entity.collection_title
-
-        self.member = None
-        self.collection = None
-
-        self._set_wrap()
-
+        self.member_name = self.entity.member_name
+        self.member_title = self.entity.member_title
+        self.collection_name = self.entity.collection_name
+        self.collection_title = self.entity.collection_title
+        self.format = kwargs.get('format',
+            request.params.get('format', self.default_format))
         self._init_properties()
+        log.debug('Action: %s' % self.action)
 
     def index(self):
-        params = request.params
-        filters = {}
-        for name, val in params.items():
-            name = name.strip().lower()
-            if name == 'filter_by':
-                filter_key = str(val)
-                filter_val = str(params[filter_key])
-                filters[filter_key] = filter_val
-        if filters:
-            self.set_collection_by_filters(filters)
-        else:
-            self.set_collection()
+        self.set_collection()
         return self._render()
 
     def show(self, id):
@@ -106,25 +76,28 @@ class _RestController(WSGIController):
     def create(self):
         self.set_member()
         self._update_member_with_params()
-        self.Session.add(self.member)
-        self.Session.flush()
+        self.db_session.add(self.member)
+        self.db_session.flush()
+        self.db_session.commit()
         self._redirect_to_member()
 
     def update(self, id):
         self.set_member(id)
         self._update_member_with_params()
-        self.Session.flush()
+        self.db_session.flush()
+        self.db_session.commit()
         self._redirect_to_member()
 
     def delete(self, id):
         self.set_member(id)
-        self.Session.delete(self.member)
-        self.Session.flush()
+        self.db_session.delete(self.member)
+        self.db_session.flush()
+        self.db_session.commit()
         self._redirect_to_collection()
 
     def set_member(self, id=None):
         if id is None:
-            member = self.Entity()
+            member = self.entity()
         else:
             member = self.get_entity_or_404(id)
         self.member = member
@@ -133,42 +106,28 @@ class _RestController(WSGIController):
     # aren't set then we'd just fall through to returning the entire
     # collection OR if the collection is huge, we might use defaults.
 
-    def set_collection(self, ids=None):
-        q = self.Session.query(self.Entity)
-        if ids is not None:
-            q = q.filter(self.Entity.id.in_(ids))
-        self.collection = q.all()
-
-    def set_collection_by_filters(self, filters):
-        q = self.Session.query(self.Entity)
-        for key in filters:
-            val = filters[key]
-            q = q.filter_by(**{key: val})
-        self.collection = q.all()
+    def set_collection(self):
+        params = request.params
+        kwargs = {}
+        if self.filters:
+            kwargs['filters'] = self.filters
+        for name in self.filter_params:
+            kwargs[name] = params.get(name, self.filter_params[name])
+        self.collection = self.entity.all(**kwargs) or abort(404)
 
     def get_entity_or_404(self, id):
-        # Try to find by primary key
-        q = self.Session.query(self.Entity)
-        try:
-            int(id)
-        except ValueError:
-            entity = None
-        else:
-            entity = q.get(id)
-        # If that fails, try to find by slug
-        if entity is None and hasattr(self.Entity, 'slug'):
-            try:
-                entity = q.filter_by(slug=id).one()
-            except NoResultFound:
-                abort(404, 'Member with ID or slug "%s" was not found.' % id)
+        # TODO: Allow get by alt pk
+        entity = self.db_session.query(self.entity).get(id) or abort(404)
         return entity
-
-    _get_entity_or_404 = get_entity_or_404
 
     def _update_member_with_params(self):
         params = request.params
         for name in params:
-            setattr(self.member, name, params[name])
+            val = self._convert_param_for_update(name, params[name])
+            setattr(self.member, name, val)
+            
+    def _convert_param_for_update(self, name, val):
+        return val
 
     def _redirect_to_member(self):
         redirect_to(self.member_name, id=self.member.id)
@@ -177,11 +136,11 @@ class _RestController(WSGIController):
         redirect_to(self.collection_name)
 
     def _render(self, *args, **kwargs):
-        format = kwargs.get('format', self.format or 'html')
+        format = kwargs.get('format', self.format)
+        log.debug('Output format: %s' % format)
         kwargs['format'] = format
-        kwargs['action'] = kwargs.get('action', self.action)
         render = getattr(self, '_render_%s' % format, self._render_template)
-        log.debug('Render method: %s' % render.__name__)
+        log.debug('Render method: %s *%s **%s' % (render.__name__, args, kwargs))
         response.status = kwargs.pop('code', 200)
         return render(*args, **kwargs)
 
@@ -211,9 +170,9 @@ class _RestController(WSGIController):
         finally:
             log.debug('(_render) template: %s' % template_name)
 
-    def _render_json(self, action=None, block=None, **kwargs):
+    def _render_json(self, block=None, **kwargs):
         """Render a JSON response from simplified ``member``s."""
-        obj = self._get_json_object(action=action, block=block)
+        obj = self._get_json_object(block=block)
         return self._render_object_as_json(obj)
 
     @jsonify
@@ -229,12 +188,11 @@ class _RestController(WSGIController):
         """
         return obj
 
-    def _get_json_object(self, action=None, wrap=True, block=None):
+    def _get_json_object(self, wrap=True, block=None):
         """Get JSON object for current request.
 
         ``wrap``
-             If set, the output will be wrapped as {result: obj} to avoid JSON
-             Array exploits.
+             If set, the output will be wrapped in a dict.
 
         ``block``
             Can be passed to modify or wrap the object before JSONifying it.
@@ -242,20 +200,65 @@ class _RestController(WSGIController):
             happen.
 
         """
+        fields = self.fields
         if self.collection is not None:
-            obj = [member.to_simple_object() for member in self.collection]
+            log.debug('Rendering collection')
+            if fields:
+                simplifier = self.entity.simplify_object
+                obj = []
+                for member in self.collection:
+                    result = {}
+                    for name, as_name in fields:
+                        result[as_name] = simplifier(getattr(member, name))
+                    obj.append(result)
+            else:
+                obj = self.entity.to_simple_collection(self.collection)
+            result_count = len(obj)
         elif self.member is not None:
-            obj = self.member.to_simple_object()
+            log.debug('Rendering member')
+            if fields:
+                simplifier = self.entity.simplify_object
+                obj = {}
+                for name, as_name in fields:
+                    obj[as_name] = simplifier(getattr(self.member, name))
+            else:
+                obj = [self.member.to_simple_object()]
+            result_count = 1
         else:
             log.debug('Neither collection nor member was set.')
             obj = None
+            result_count = 0
+        # Wrap ``obj`` (usually)
+        if self.wrap:
+            total_count = self.db_session.query(self.entity).count()
+            obj = dict(
+                response=dict(
+                    results=obj,
+                    result_count=result_count,
+                    total_count=total_count
+                )
+            )
+        # Further modify ``obj`` if ``block`` given
         if block is not None:
-            obj = block(obj)
-        if wrap:
-            obj = dict(result=obj)
+            obj = block(obj)            
         return obj
 
+    @property
+    def fields(self):
+        """Fields to include in the response."""
+        fields = request.params.get('fields', None)
+        if fields:
+            fields = json.loads(fields)
+            if isinstance(fields, list):
+                fields = dict((name, name) for name in fields)
+            fields = fields.items()
+        return fields
+
     def _get_wrap(self):
+        try:
+            self._wrap
+        except AttributeError:
+            self._set_wrap()
         return self._wrap
     def _set_wrap(self, value=None):
         """Set whether to wrap a template in its parent template.
@@ -271,14 +274,11 @@ class _RestController(WSGIController):
             it.
 
         """
-        if value is not None:
-            self._wrap = value
+        if value is None:
+            wrap = request.params.get('wrap', 'true')
+            self._wrap = asbool(wrap)
         else:
-            wrap = request.params.get('wrap', 'true').strip().lower()
-            if wrap in ('0', 'n', 'no', 'false', 'nil'):
-                self._wrap = False
-            else:
-                self._wrap = True
+            self._wrap = value
         c.wrap = self._wrap
     wrap = property(_get_wrap, _set_wrap)
 
@@ -286,7 +286,7 @@ class _RestController(WSGIController):
         """Set attribute on both ``self`` and ``c``."""
         if isinstance(getattr(self.__class__, name, None), property):
             # I.e., just call the property's _set method
-            super(_RestController, self).__setattr__(name, value)
+            super(Controller, self).__setattr__(name, value)
         else:
             self._set_property([name], value)
 

@@ -1,1 +1,1 @@
-from restler.base import RestController
+from restler.base import Controller
