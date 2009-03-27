@@ -1,1 +1,1 @@
-from restler.base import Controller
+"""Restler, the RESTful base controller for Pylons."""
