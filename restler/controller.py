@@ -118,7 +118,10 @@ class Controller(WSGIController):
         if self.filters:
             kwargs['filters'] = self.filters
         for name in self.filter_params:
-            kwargs[name] = params.get(name, self.filter_params[name])
+            val = params.get(name, '').strip()
+            if val == '':
+                val = self.filter_params[name]
+            kwargs[name] = val
         self.collection = self.entity.all(**kwargs) or abort(404)
 
     def get_entity_or_404(self, id):
