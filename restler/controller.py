@@ -29,9 +29,6 @@ class Controller(WSGIController):
     entity = None
     """Entity class assocated with this controller."""
 
-    db_session = None
-    """Database session object used for queries against ``entity``."""
-
     filter_params = {}
     """Request param names with defaults, for filtering collections."""
 
@@ -59,6 +56,21 @@ class Controller(WSGIController):
             request.params.get('format', self.default_format))
         self._init_properties()
         log.debug('Action: %s' % self.action)
+
+    @property
+    def db_session(self):
+        """Database session factory.
+
+        The default implementation here assumes that an :attr:`entity` has a
+        :meth:`get_session` method. The session returned from that method is
+        cached per :class:`Controller` instance.
+
+        """
+        try:
+            self._db_session
+        except AttributeError:
+            self._db_session = self.entity.get_session()
+        return self._db_session
 
     def index(self):
         self.set_collection()
@@ -134,7 +146,7 @@ class Controller(WSGIController):
         for name in params:
             val = self._convert_param_for_update(name, params[name])
             setattr(self.member, name, val)
-            
+
     def _convert_param_for_update(self, name, val):
         return val
 
@@ -249,7 +261,7 @@ class Controller(WSGIController):
             )
         # Further modify ``obj`` if ``block`` given
         if block is not None:
-            obj = block(obj)            
+            obj = block(obj)
         return obj
 
     @property
