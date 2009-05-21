@@ -134,17 +134,11 @@ class Controller(WSGIController):
             if val == '':
                 val = self.filter_params[name]
             kwargs[name] = val
-        if self.fields:
-            kwargs['fields'] = [getattr(self.entity, f[0]) for f in self.fields]
         self.collection = self.entity.all(**kwargs) or abort(404)
 
     def get_entity_or_404(self, id):
         # TODO: Allow get by alt pk
-        if self.fields:
-            args = [getattr(self.entity, f[0]) for f in self.fields]
-        else:
-            args = (self.entity,)
-        entity = self.db_session.query(*args).get(id) or abort(404)
+        entity = self.db_session.query(self.entity).get(id) or abort(404)
         return entity
 
     def _update_member_with_params(self):
