@@ -134,11 +134,17 @@ class Controller(WSGIController):
             if val == '':
                 val = self.filter_params[name]
             kwargs[name] = val
+        if self.fields:
+            kwargs['fields'] = [getattr(self.entity, f[0]) for f in self.fields]
         self.collection = self.entity.all(**kwargs) or abort(404)
 
     def get_entity_or_404(self, id):
         # TODO: Allow get by alt pk
-        entity = self.db_session.query(self.entity).get(id) or abort(404)
+        if self.fields:
+            args = [getattr(self.entity, f[0]) for f in self.fields]
+        else:
+            args = (self.entity,)
+        entity = self.db_session.query(*args).get(id) or abort(404)
         return entity
 
     def _update_member_with_params(self):
@@ -274,15 +280,15 @@ class Controller(WSGIController):
         A dict is used to map the field's column name to a different name
         in the response. In this case, the dict must contain a ``name`` key
         with the field's column name and a ``mapping`` key with the name
-        desired in the reponse.   
+        desired in the reponse.
 
         Example::
 
             ?fields=["id", {"name": "description", "mapping": "text"}]
-            
+
             In this example, the ``id`` column is not mapped to a new name
             while the ``description`` column will be referred to as ``text``
-            in the response. 
+            in the response.
 
         """
         fields = request.params.get('fields', None)
@@ -294,7 +300,7 @@ class Controller(WSGIController):
                     if isinstance(item, basestring):
                         mapped_fields.append((item, item))
                     elif isinstance(item, dict):
-                        mapped_fields.append((item['name'], item['mapping']))           
+                        mapped_fields.append((item['name'], item['mapping']))
             elif isinstance(fields, dict):
                 # Support legacy dict format
                 mapped_fields = fields.items()
