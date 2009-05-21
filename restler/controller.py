@@ -266,14 +266,40 @@ class Controller(WSGIController):
 
     @property
     def fields(self):
-        """Fields to include in the response."""
+        """Fields to include in response, with optional field name mapping.
+
+        The ``fields`` request parameter should be a JSON list. Each item in
+        the list may be either string or a dict. A string is used to
+        indicate that the field's column name should be used in the response.
+        A dict is used to map the field's column name to a different name
+        in the response. In this case, the dict must contain a ``name`` key
+        with the field's column name and a ``mapping`` key with the name
+        desired in the reponse.   
+
+        Example::
+
+            ?fields=["id", {"name": "description", "mapping": "text"}]
+            
+            In this example, the ``id`` column is not mapped to a new name
+            while the ``description`` column will be referred to as ``text``
+            in the response. 
+
+        """
         fields = request.params.get('fields', None)
         if fields:
             fields = json.loads(fields)
+            mapped_fields = []
             if isinstance(fields, list):
-                fields = dict((name, name) for name in fields)
-            fields = fields.items()
-        return fields
+                for item in fields:
+                    if isinstance(item, basestring):
+                        mapped_fields.append((item, item))
+                    elif isinstance(item, dict):
+                        mapped_fields.append((item['name'], item['mapping']))           
+            elif isinstance(fields, dict):
+                # Support legacy dict format
+                mapped_fields = fields.items()
+            return mapped_fields
+        return None
 
     def _get_wrap(self):
         try:
