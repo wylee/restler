@@ -331,7 +331,8 @@ class Controller(WSGIController):
 
     def __setattr__(self, name, value):
         """Set attribute on both ``self`` and ``c``."""
-        if isinstance(getattr(self.__class__, name, None), property):
+        attr = getattr(self.__class__, name, None)
+        if isinstance(attr, property) and attr.fset is not None:
             # I.e., just call the property's _set method
             super(Controller, self).__setattr__(name, value)
         else:
