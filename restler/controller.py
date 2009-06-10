@@ -57,8 +57,7 @@ class Controller(WSGIController):
         self._init_properties()
         log.debug('Action: %s' % self.action)
 
-    @property
-    def db_session(self):
+    def _get_db_session(self):
         """Database session factory.
 
         The default implementation here assumes that an :attr:`entity` has a
@@ -71,6 +70,9 @@ class Controller(WSGIController):
         except AttributeError:
             self._db_session = self.entity.get_session()
         return self._db_session
+    def _set_db_session(self, db_session):
+        self._db_session = db_session
+    db_session = property(_get_db_session, _set_db_session)
 
     def index(self):
         self.set_collection()
