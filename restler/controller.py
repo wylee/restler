@@ -204,7 +204,7 @@ class Controller(WSGIController):
 
         ``obj`` must be JSONifiable by the (simple)json module.
 
-        The final output of this method is returned by the ``jsonify``
+        The final output of this method is returned by the Pylons ``jsonify``
         decorator, which creates a proper JSON response with the correct
         content type.
 
