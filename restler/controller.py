@@ -200,7 +200,7 @@ class Controller(WSGIController):
 
     @jsonify
     def _render_object_as_json(self, obj):
-        """Render an object in JSON format with content type of text/json.
+        """Render an object in JSON format with correct content type.
 
         ``obj`` must be JSONifiable by the (simple)json module.
 
