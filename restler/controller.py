@@ -60,19 +60,22 @@ class Controller(WSGIController):
     def _get_db_session(self):
         """Database session factory.
 
-        The default implementation here assumes that an :attr:`entity` has a
-        :meth:`get_session` method. The session returned from that method is
-        cached per :class:`Controller` instance.
+        The default implementation here assumes that subclasses have a public
+        :meth:`get_db_session` method. The session returned from that method
+        is cached per :class:`Controller` instance.
 
         """
         try:
             self._db_session
         except AttributeError:
-            self._db_session = self.entity.get_session()
+            self._db_session = self.get_db_session()
         return self._db_session
     def _set_db_session(self, db_session):
         self._db_session = db_session
     db_session = property(_get_db_session, _set_db_session)
+
+    def get_db_session(self):
+        raise NotImplementedError
 
     def index(self):
         self.set_collection()
