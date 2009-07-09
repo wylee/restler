@@ -33,7 +33,7 @@ class Controller(WSGIController):
     """Request param names with defaults, for filtering collections."""
 
     filters = []
-    """SQLAlchemy filters--anything that could be an arg to `q.filter`."""
+    """SQLAlchemy filters--anything that can be an arg to `query().filter`."""
 
     default_format = 'json'
 
@@ -155,11 +155,15 @@ class Controller(WSGIController):
     def _convert_param_for_update(self, name, val):
         return val
 
-    def _redirect_to_member(self):
-        redirect_to(self.member_name, id=self.member.id)
+    def _redirect_to_member(self, member=None):
+        member = self.member if member is None else member
+        redirect_to(
+            controller=self.controller, action='show', id=member.id,
+            format=self.format)
 
     def _redirect_to_collection(self):
-        redirect_to(self.collection_name)
+        redirect_to(
+            controller=self.controller, action='index', format=self.format)
 
     def _render(self, *args, **kwargs):
         format = kwargs.get('format', self.format)
