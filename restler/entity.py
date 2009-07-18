@@ -10,7 +10,10 @@ entities).
 """
 import datetime
 import decimal
-import json
+try:
+    import json
+except ImportError:
+    import simplejson as json
 
 from string import ascii_uppercase
 
