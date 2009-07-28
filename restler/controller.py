@@ -29,7 +29,11 @@ class Controller(WSGIController):
     entity = None
     """Entity class assocated with this controller."""
 
-    filter_params = {}
+    filter_params = {
+        'offset': None,
+        'start': None,
+        'limit': None,
+    }
     """Request param names with defaults, for filtering collections."""
 
     filters = []
@@ -131,15 +135,30 @@ class Controller(WSGIController):
 
     def set_collection(self):
         params = request.params
+        q = self.db_session.query(self.entity)
+
+        for f in self.filters or []:
+            q = q.filter(f)
+
         kwargs = {}
-        if self.filters:
-            kwargs['filters'] = self.filters
         for name in self.filter_params:
             val = params.get(name, '').strip()
             if val == '':
                 val = self.filter_params[name]
             kwargs[name] = val
-        self.collection = self.entity.all(**kwargs) or abort(404)
+
+        offset = kwargs.pop('offset', kwargs.pop('start', None))
+        limit = kwargs.pop('limit', None)
+        if offset is not None:
+            q = q.offset(int(offset))
+        if limit is not None:
+            q = q.limit(int(limit))
+
+        # Remaining filter params are assumed to be column values
+        for k, v in kwargs.items():
+            q = q.filter_by(**{k: v})
+
+        self.collection = q.all() or abort(404)
 
     def get_entity_or_404(self, id):
         # TODO: Allow get by alt pk

@@ -49,40 +49,6 @@ class Entity(object):
             return tuple(vals)
 
     @classmethod
-    def all(cls, filters=None, start=None, offset=None, limit=None):
-        """Get "all" records of this entity type, possibly filtered.
-
-        Note that the name `all` is somewhat of a misnomer. This method
-        should perhaps be named `collection` or `some`.
-
-        ``filters`` is a list of objects that are suitable within a SQLAlchemy
-        Session filter. These can be strings or SA constructs.
-
-        ``offset`` and ``start`` have the same meaning--SQL OFFSET as used by,
-        e.g., Postgres. ``start`` is here just to make certain ExtJS AJAX
-        queries easier.
-
-        ``limit`` limits the number of items returned to the specified number.
-
-        0 is a valid value for ``offset`` and ``limit``, so special handling
-        is required when checking to see if they have been passed.
-
-        """
-        start = None if start == '' else start
-        offset = None if offset == '' else offset
-        limit = None if limit == '' else limit
-        q = cls.get_db_session().query(cls)
-        for f in filters or []:
-            q = q.filter(f)
-        offset = offset if offset is not None else start
-        if offset is not None:
-            q = q.offset(int(offset))
-        if limit is not None:
-            q = q.limit(int(limit))
-        collection = q.all()
-        return collection
-
-    @classmethod
     def simplify_object(cls, obj):
         """Convert ``obj`` to something JSON encoder can handle."""
         try:
