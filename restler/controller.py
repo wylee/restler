@@ -133,11 +133,12 @@ class Controller(WSGIController):
     # aren't set then we'd just fall through to returning the entire
     # collection OR if the collection is huge, we might use defaults.
 
-    def set_collection(self):
+    def set_collection(self, extra_filters=None):
         params = request.params
         q = self.db_session.query(self.entity)
 
-        for f in self.filters or []:
+        filters = (self.filters or []) + (extra_filters or [])
+        for f in filters:
             q = q.filter(f)
 
         kwargs = {}
