@@ -1,4 +1,5 @@
 import logging
+import warnings
 
 from paste.deploy.converters import asbool
 
@@ -37,7 +38,12 @@ class Controller(WSGIController):
     """Request param names with defaults, for filtering collections."""
 
     filters = []
-    """SQLAlchemy filters--anything that can be an arg to `query().filter`."""
+    """SQLAlchemy filters--anything that can be an arg to `query().filter`.
+
+    These filters are *not* request-specific--they are applied on *every*
+    request.
+
+    """
 
     default_format = 'json'
 
@@ -150,14 +156,20 @@ class Controller(WSGIController):
 
         offset = kwargs.pop('offset', kwargs.pop('start', None))
         limit = kwargs.pop('limit', None)
+
+        # Remaining filter params are assumed to be column values
+        for k, v in kwargs.items():
+            v = self.convert_param(k, v)
+            filter_method = getattr(self.entity, 'filter_by_%s' % k, None)
+            if filter_method is not None:
+                q = filter_method(v, q)
+            else:
+                q = q.filter_by(**{k: v})
+
         if offset is not None:
             q = q.offset(int(offset))
         if limit is not None:
             q = q.limit(int(limit))
-
-        # Remaining filter params are assumed to be column values
-        for k, v in kwargs.items():
-            q = q.filter_by(**{k: v})
 
         self.collection = q.all() or abort(404)
 
@@ -169,11 +181,15 @@ class Controller(WSGIController):
     def _update_member_with_params(self):
         params = request.params
         for name in params:
-            val = self._convert_param_for_update(name, params[name])
+            val = self.convert_param(name, params[name])
             setattr(self.member, name, val)
 
-    def _convert_param_for_update(self, name, val):
+    def convert_param(self, name, val):
         return val
+
+    def _convert_param_for_update(self, name, val):
+        warnings.warn(DeprecationWarning('Use `convert_param` method instead.'))
+        return self.convert_param(name, val)
 
     def _redirect_to_member(self, member=None):
         member = self.member if member is None else member
