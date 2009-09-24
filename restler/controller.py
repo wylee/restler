@@ -25,6 +25,12 @@ log = logging.getLogger(__name__)
 TemplateNotFoundExceptions = (mako.exceptions.TopLevelLookupException,)
 
 
+class NoDefaultValue(object):
+
+    def __new__(self, *args, **kwargs):
+        raise NotImplementedError('This class may not be instantiated.')
+
+
 class Controller(WSGIController):
 
     entity = None
@@ -143,22 +149,29 @@ class Controller(WSGIController):
         params = request.params
         q = self.db_session.query(self.entity)
 
+        # Apply "global" (i.e., every request) filters
         filters = (self.filters or []) + (extra_filters or [])
         for f in filters:
             q = q.filter(f)
 
-        kwargs = {}
+        # Apply per-request filters
+        filters = {}
         for name in self.filter_params:
-            val = params.get(name, '').strip()
-            if val == '':
+            if name in params:
+                # Use param value unless it's blank
+                val = params.get(name).strip()
+                if val == '':
+                    val = self.filter_params[name]
+            else:
                 val = self.filter_params[name]
-            kwargs[name] = val
+            if val is not NoDefaultValue:
+                filters[name] = val
 
-        offset = kwargs.pop('offset', kwargs.pop('start', None))
-        limit = kwargs.pop('limit', None)
+        offset = filters.pop('offset', filters.pop('start', None))
+        limit = filters.pop('limit', None)
 
         # Remaining filter params are assumed to be column values
-        for k, v in kwargs.items():
+        for k, v in filters.items():
             v = self.convert_param(k, v)
             filter_method = getattr(self.entity, 'filter_by_%s' % k, None)
             if filter_method is not None:
