@@ -175,7 +175,7 @@ class Controller(WSGIController):
             v = self.convert_param(k, v)
             filter_method = getattr(self.entity, 'filter_by_%s' % k, None)
             if filter_method is not None:
-                q = filter_method(v, q)
+                q = filter_method(q, v)
             else:
                 q = q.filter_by(**{k: v})
 
