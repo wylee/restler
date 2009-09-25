@@ -52,9 +52,11 @@ class Entity(object):
     def simplify_object(cls, obj):
         """Convert ``obj`` to something JSON encoder can handle."""
         try:
-            obj = obj.to_simple_object()
+            obj.to_simple_object
         except AttributeError:
             pass
+        else:
+            obj = obj.to_simple_object()
         if isinstance(obj, decimal.Decimal):
             f, i = float(obj), int(obj)
             obj = i if f == i else f
