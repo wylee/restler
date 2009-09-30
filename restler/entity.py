@@ -57,7 +57,9 @@ class Entity(object):
             pass
         else:
             obj = obj.to_simple_object()
-        if isinstance(obj, decimal.Decimal):
+        if isinstance(obj, (list, tuple)):
+            obj = [cls.simplify_object(i) for i in obj]
+        elif isinstance(obj, decimal.Decimal):
             f, i = float(obj), int(obj)
             obj = i if f == i else f
         elif isinstance(obj, datetime_types):
@@ -65,12 +67,21 @@ class Entity(object):
         return obj
 
     def to_simple_object(self, fields=None):
+        """Convert this object into a simplified that can be JSONified.
+
+        ``fields`` is a list of pairs of (attribute name, mapped name). If
+        this arg isn't given, ``self.public_names`` is used instead.
+
+        """
         obj = dict(type=self.__class__.__name__)
-        names = fields or self.public_names
-        for name in names:
-            val = getattr(self, name)
-            val = self.simplify_object(val)
-            obj[name] = val
+        if fields is None:
+            fields = [(f, f) for f in self.public_names]
+        for name, as_name in fields:
+            o = self
+            for n in name.split('.'):
+                o = getattr(o, n)
+            val = self.simplify_object(o)
+            obj[as_name] = val
         return obj
 
     def to_json(self, fields=None):

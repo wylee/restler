@@ -279,29 +279,13 @@ class Controller(WSGIController):
             happen.
 
         """
-        fields = self.fields
         if self.collection is not None:
             log.debug('Rendering collection')
-            if fields:
-                simplifier = self.entity.simplify_object
-                obj = []
-                for member in self.collection:
-                    result = {}
-                    for name, as_name in fields:
-                        result[as_name] = simplifier(getattr(member, name))
-                    obj.append(result)
-            else:
-                obj = self.entity.to_simple_collection(self.collection)
+            obj = self.entity.to_simple_collection(self.collection, self.fields)
             result_count = len(obj)
         elif self.member is not None:
             log.debug('Rendering member')
-            if fields:
-                simplifier = self.entity.simplify_object
-                obj = {}
-                for name, as_name in fields:
-                    obj[as_name] = simplifier(getattr(self.member, name))
-            else:
-                obj = [self.member.to_simple_object()]
+            obj = [self.member.to_simple_object(self.fields)]
             result_count = 1
         else:
             log.debug('Neither collection nor member was set.')
@@ -344,7 +328,7 @@ class Controller(WSGIController):
 
         """
         fields = request.params.get('fields', None)
-        if fields:
+        if fields is not None:
             fields = json.loads(fields)
             mapped_fields = []
             if isinstance(fields, list):
@@ -357,7 +341,8 @@ class Controller(WSGIController):
                 # Support legacy dict format
                 mapped_fields = fields.items()
             return mapped_fields
-        return None
+        else:
+            return None
 
     def _get_wrap(self):
         try:
