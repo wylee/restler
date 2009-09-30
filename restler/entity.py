@@ -78,8 +78,6 @@ class Entity(object):
 
     @classmethod
     def to_simple_collection(cls, collection=None, fields=None):
-        if collection is None:
-            collection = cls.get_db_session().query(cls)
         return [i.to_simple_object(fields=fields) for i in collection]
 
     @classmethod
@@ -88,10 +86,12 @@ class Entity(object):
         return json.dumps(simple_obj)
 
     def get_column_default(self, key):
+        # XXX: This whole method feels like a hack...
         default = self.__table__.columns.get(key).default
         if default is None:
             return default
         else:
+            # XXX: Entity classes no longer have `get_db_session` classmethod
             return cls.get_db_session().execute(default)
 
     @property
