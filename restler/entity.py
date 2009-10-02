@@ -88,8 +88,20 @@ class Entity(object):
         return json.dumps(self.to_simple_object(fields=fields))
 
     @classmethod
-    def to_simple_collection(cls, collection=None, fields=None):
-        return [m.to_simple_object(fields=fields) for m in collection]
+    def to_simple_collection(cls, collection, fields=None):
+        try:
+            collection[0].to_simple_object
+        except AttributeError:
+            # Assume collection of `RowTuple`s
+            dicts = []
+            for m in collection:
+                keys = m.keys()
+                vals = (getattr(m, k) for k in keys)
+                dicts.append(dict(zip(keys, vals)))
+            return [cls.simplify_object(d) for d in dicts]
+        else:
+            # Assume collection of instances of a mapped class
+            return [m.to_simple_object(fields) for m in collection]
 
     @classmethod
     def to_json_collection(cls, collection=None, fields=None):
