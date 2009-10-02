@@ -1,7 +1,7 @@
 import logging
 import warnings
 
-from paste.deploy.converters import asbool
+from paste.deploy.converters import asbool, aslist
 
 from pylons import request, response
 from pylons import tmpl_context as c
@@ -10,6 +10,7 @@ from pylons.controllers.util import abort, redirect_to
 from pylons.decorators import jsonify
 from pylons.templating import render_mako as render
 
+from sqlalchemy.orm import class_mapper
 from sqlalchemy.orm.exc import NoResultFound
 
 import mako
@@ -37,9 +38,11 @@ class Controller(WSGIController):
     """Entity class assocated with this controller."""
 
     filter_params = {
+        'distinct': False,
         'offset': None,
         'start': None,
         'limit': None,
+        'order_by': None
     }
     """Request param names with defaults, for filtering collections."""
 
@@ -61,6 +64,7 @@ class Controller(WSGIController):
             self.db_session.remove()
 
     def __before__(self, *args, **kwargs):
+        self.db_session.get_bind(class_mapper(self.entity))
         route_info = request.environ['pylons.routes_dict']
         self.controller = route_info['controller']
         self.action = route_info['action']
@@ -145,9 +149,9 @@ class Controller(WSGIController):
     # aren't set then we'd just fall through to returning the entire
     # collection OR if the collection is huge, we might use defaults.
 
-    def set_collection(self, extra_filters=None):
+    def set_collection(self, q=None, extra_filters=None):
         params = request.params
-        q = self.db_session.query(self.entity)
+        q = q if q is not None else self.db_session.query(self.entity)
 
         # Apply "global" (i.e., every request) filters
         filters = (self.filters or []) + (extra_filters or [])
@@ -167,8 +171,10 @@ class Controller(WSGIController):
             if val is not NoDefaultValue:
                 filters[name] = val
 
+        distinct = asbool(filters.pop('distinct', False))
         offset = filters.pop('offset', filters.pop('start', None))
         limit = filters.pop('limit', None)
+        order_by = filters.pop('order_by', None)
 
         # Remaining filter params are assumed to be column values
         for k, v in filters.items():
@@ -179,10 +185,14 @@ class Controller(WSGIController):
             else:
                 q = q.filter_by(**{k: v})
 
+        if distinct:
+            q = q.distinct()
         if offset is not None:
             q = q.offset(int(offset))
         if limit is not None:
             q = q.limit(int(limit))
+        if order_by is not None:
+            q = q.order_by(*aslist(order_by, ','))
 
         self.collection = q.all() or abort(404)
 
