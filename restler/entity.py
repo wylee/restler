@@ -67,7 +67,7 @@ class Entity(object):
         return obj
 
     def to_simple_object(self, fields=None):
-        """Convert this object into a simplified that can be JSONified.
+        """Convert this object into a simplified form that can be JSONified.
 
         ``fields`` is a list of pairs of (attribute name, mapped name). If
         this arg isn't given, ``self.public_names`` is used instead.
@@ -89,7 +89,7 @@ class Entity(object):
 
     @classmethod
     def to_simple_collection(cls, collection=None, fields=None):
-        return [i.to_simple_object(fields=fields) for i in collection]
+        return [m.to_simple_object(fields=fields) for m in collection]
 
     @classmethod
     def to_json_collection(cls, collection=None, fields=None):
