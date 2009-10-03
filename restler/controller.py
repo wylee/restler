@@ -37,13 +37,15 @@ class Controller(WSGIController):
     entity = None
     """Entity class assocated with this controller."""
 
-    filter_params = {
-        'distinct': False,
-        'offset': None,
-        'start': None,
-        'limit': None,
-        'order_by': None
-    }
+    base_filter_params = dict(
+        distinct=False,
+        offset=None,
+        start=None,
+        limit=None,
+        order_by=None,
+    )
+
+    filter_params = {}
     """Request param names with defaults, for filtering collections."""
 
     filters = []
@@ -145,10 +147,6 @@ class Controller(WSGIController):
             member = self.get_entity_or_404(id)
         self.member = member
 
-    # TODO: Allow pagination for collection methods. If pagination params
-    # aren't set then we'd just fall through to returning the entire
-    # collection OR if the collection is huge, we might use defaults.
-
     def set_collection(self, q=None, extra_filters=None):
         params = request.params
         q = q if q is not None else self.db_session.query(self.entity)
@@ -160,16 +158,19 @@ class Controller(WSGIController):
 
         # Apply per-request filters
         filters = {}
-        for name in self.filter_params:
-            if name in params:
-                # Use param value unless it's blank
-                val = params.get(name).strip()
-                if val == '':
-                    val = self.filter_params[name]
-            else:
-                val = self.filter_params[name]
-            if val is not NoDefaultValue:
-                filters[name] = val
+        def get_filter_param_values(filter_params):
+            for name in filter_params:
+                if name in params:
+                    # Use param value unless it's blank
+                    val = params.get(name).strip()
+                    if val == '':
+                        val = filter_params[name]
+                else:
+                    val = filter_params[name]
+                if val is not NoDefaultValue:
+                    filters[name] = val
+        get_filter_param_values(self.base_filter_params)
+        get_filter_param_values(self.filter_params)
 
         distinct = asbool(filters.pop('distinct', False))
         offset = filters.pop('offset', filters.pop('start', None))
