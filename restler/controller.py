@@ -198,7 +198,7 @@ class Controller(WSGIController):
         self.collection = q.all() or abort(404)
 
     def get_entity_or_404(self, id):
-        # TODO: Allow get by alt pk
+        id = self.entity.str_to_id(id)
         entity = self.db_session.query(self.entity).get(id) or abort(404)
         return entity
 

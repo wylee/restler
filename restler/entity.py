@@ -18,6 +18,7 @@ except ImportError:
 from string import ascii_uppercase
 
 from sqlalchemy import Column
+from sqlalchemy.orm import class_mapper
 
 
 datetime_types = (datetime.time, datetime.date, datetime.datetime)
@@ -47,6 +48,25 @@ class Entity(object):
             return vals[0]
         else:
             return tuple(vals)
+
+    @classmethod
+    def str_to_id(cls, id):
+        if cls.has_multipart_primary_key():
+            id = eval(id, dict(__builtins__={}))  # HACK: Find better way???
+            if not isinstance(id, tuple):
+                raise ValueError(
+                    'Expected a string that could be parsed as a multi-part '
+                    'primary key. Something like `(1, "a")`')
+        return id
+
+    @classmethod
+    def has_multipart_primary_key(cls):
+        try:
+            cls._has_multipart_primary_key
+        except AttributeError:
+            pk = class_mapper(cls).primary_key
+            cls._has_multipart_primary_key = (True if (len(pk) > 1) else False)
+        return cls._has_multipart_primary_key
 
     @classmethod
     def simplify_object(cls, obj):
