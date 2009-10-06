@@ -188,12 +188,12 @@ class Controller(WSGIController):
 
         if distinct:
             q = q.distinct()
+        if order_by is not None:
+            q = q.order_by(*aslist(order_by, ','))
         if offset is not None:
             q = q.offset(int(offset))
         if limit is not None:
             q = q.limit(int(limit))
-        if order_by is not None:
-            q = q.order_by(*aslist(order_by, ','))
 
         self.collection = q.all() or abort(404)
 
