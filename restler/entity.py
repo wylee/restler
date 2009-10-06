@@ -129,13 +129,9 @@ class Entity(object):
         return json.dumps(simple_obj)
 
     def get_column_default(self, key):
-        # XXX: This whole method feels like a hack...
-        default = self.__table__.columns.get(key).default
-        if default is None:
-            return default
-        else:
-            # XXX: Entity classes no longer have `get_db_session` classmethod
-            return cls.get_db_session().execute(default)
+        """Get default set in SQLA table (NOT server default)."""
+        default = self.__table__.columns.get(key).default.arg
+        return default
 
     @property
     def public_names(self):
