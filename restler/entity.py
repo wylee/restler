@@ -49,11 +49,23 @@ class Entity(object):
         else:
             return tuple(vals)
 
+    @property
+    def id_str(self):
+        """Convert `id` from Python to string."""
+        id = json.dumps(self.simplify_object(self.id))
+        return id
+
     @classmethod
     def str_to_id(cls, id):
+        """Convert ``id`` from string to Python.
+
+        If `id` is scalar, return ``id`` as is; if it's a list, assume it's
+        JSON encoded and decode it.
+
+        """
         if cls.has_multipart_primary_key():
-            id = eval(id, dict(__builtins__={}))  # HACK: Find better way???
-            if not isinstance(id, tuple):
+            id = json.loads(id)
+            if not isinstance(id, list):
                 raise ValueError(
                     'Expected a string that could be parsed as a multi-part '
                     'primary key. Something like `(1, "a")`')
