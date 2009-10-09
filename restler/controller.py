@@ -161,9 +161,9 @@ class Controller(WSGIController):
         def get_filter_param_values(filter_params):
             for name in filter_params:
                 if name in params:
-                    # Use param value unless it's blank
-                    val = params.get(name).strip()
-                    if val == '':
+                    # Use param value unless it's blank. XXX: Don't strip?
+                    val = params.get(name)
+                    if val.strip() == '':
                         val = filter_params[name]
                 else:
                     val = filter_params[name]
