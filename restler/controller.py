@@ -304,12 +304,10 @@ class Controller(WSGIController):
             result_count = 0
         # Wrap ``obj`` (usually)
         if self.wrap:
-            total_count = self.db_session.query(self.entity).count()
             obj = dict(
                 response=dict(
                     results=obj,
                     result_count=result_count,
-                    total_count=total_count
                 )
             )
         # Further modify ``obj`` if ``block`` given
