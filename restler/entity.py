@@ -81,7 +81,7 @@ class Entity(object):
         return cls._has_multipart_primary_key
 
     @classmethod
-    def simplify_object(cls, obj):
+    def simplify_object(cls, obj, name=None):
         """Convert ``obj`` to something JSON encoder can handle."""
         try:
             obj.to_simple_object
@@ -112,7 +112,7 @@ class Entity(object):
             o = self
             for n in name.split('.'):
                 o = getattr(o, n)
-            val = self.simplify_object(o)
+            val = self.simplify_object(o, n)
             obj[as_name] = val
         return obj
 
