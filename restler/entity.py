@@ -109,11 +109,22 @@ class Entity(object):
         if fields is None:
             fields = [(f, f) for f in self.public_names]
         for name, as_name in fields:
+            name_parts = name.split('.')
             o = self
-            for n in name.split('.'):
+            for n in name_parts:
                 o = getattr(o, n)
             val = self.simplify_object(o, n)
-            obj[as_name] = val
+            if name == as_name:
+                # If `name` has only one part, this sets obj[name] = val.
+                # If `name` had more than N parts, this sets
+                # obj[name1][name2][...][nameN] = val.
+                slot = obj
+                for n in name_parts[:-1]:
+                    slot = slot.setdefault(n, {})
+                slot[name_parts[-1]] = val
+            else:
+                # Use user-specified name
+                obj[as_name] = val
         return obj
 
     def to_json(self, fields=None):
