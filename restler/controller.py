@@ -148,7 +148,6 @@ class Controller(WSGIController):
         self.member = member
 
     def set_collection(self, q=None, extra_filters=None):
-        params = request.params
         q = q if q is not None else self.db_session.query(self.entity)
 
         # Apply "global" (i.e., every request) filters
@@ -157,27 +156,14 @@ class Controller(WSGIController):
             q = q.filter(f)
 
         # Apply per-request filters
-        filters = {}
-        def get_filter_param_values(filter_params):
-            for name in filter_params:
-                if name in params:
-                    # Use param value unless it's blank. XXX: Don't strip?
-                    val = params.get(name)
-                    if val.strip() == '':
-                        val = filter_params[name]
-                else:
-                    val = filter_params[name]
-                if val is not NoDefaultValue:
-                    filters[name] = val
-        get_filter_param_values(self.base_filter_params)
-        get_filter_param_values(self.filter_params)
+        filters = self._set_filters_from_params(self.base_filter_params)
+        filters.update(self._set_filters_from_params(self.filter_params))
 
         distinct = asbool(filters.pop('distinct', False))
         offset = filters.pop('offset', filters.pop('start', None))
         limit = filters.pop('limit', None)
         order_by = filters.pop('order_by', None)
 
-        # Remaining filter params are assumed to be column values
         for k, v in filters.items():
             v = self.convert_param(k, v)
             filter_method = getattr(self.entity, 'filter_by_%s' % k, None)
@@ -197,6 +183,23 @@ class Controller(WSGIController):
 
         self.collection = q.all() or abort(404)
 
+    def _set_filters_from_params(self, filter_params):
+        filters = {}
+        params = request.params
+        for name in filter_params:
+            if name in params:
+                # Use param value unless it's blank. XXX: Don't strip?
+                val = params.get(name)
+                if val.strip() == '':
+                    val = filter_params[name]
+            else:
+                val = filter_params[name]
+            if val is not NoDefaultValue:
+                if callable(val):
+                    val = val()
+                filters[name] = val
+        return filters
+
     def get_entity_or_404(self, id):
         id = self.entity.str_to_id(id)
         entity = self.db_session.query(self.entity).get(id) or abort(404)
@@ -209,6 +212,7 @@ class Controller(WSGIController):
             setattr(self.member, name, val)
 
     def convert_param(self, name, val):
+        """Convert param value (string) to Python value."""
         return val
 
     def _convert_param_for_update(self, name, val):
