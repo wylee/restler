@@ -1,9 +1,12 @@
 from setuptools import setup, find_packages
 
 
+version = '0.3.0dev'
+
+
 setup(
     name='Restler',
-    version='0.3',
+    version=version,
     description="""RESTful base controller for Pylons 0.9.7.""",
     long_description="""\
 Restler is a controller for Pylons projects that provides a set of default
