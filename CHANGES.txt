@@ -1,4 +1,4 @@
-0.3.0 (unreleased)
+0.3.0 (2009-11-06)
 ------------------
 
 - Totally revamped relative to 0.2 series. Tries to flexibly support all
