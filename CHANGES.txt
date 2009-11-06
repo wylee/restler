@@ -1,4 +1,20 @@
-SVN
+0.3.0 (unreleased)
+------------------
+
+- Totally revamped relative to 0.2 series. Tries to flexibly support all
+  kinds of WS queries, filtering, limits, distinct, etc.
+- Supports Pylons 0.9.7 and friends (probably does not work well with Pylons
+  0.9.6).
+- Thinking about removing templates--i.e., removing all the admin interface
+  aspects and focusing just on the lower level controller aspect. All that
+  other stuff could be moved to Restin (unmaintained) or just discarded.
+- Added Restler-controller-friendly entity (AKA model) base class.
+- Added @privileged decorator.
+- Manage releases with zest.releaser.
+
+Ancient History
+---------------
+
 * 2007-08-13 -- Removed the MyProject sample Pylons project
 * Extracted from byCycle repo at r776 and moved to Google Code
 * Removed `execfile` wonkiness in favor of importing restler then calling its
@@ -21,10 +37,9 @@ SVN
   using `map.connect`) without names. Although this sounds harder to do (it's
   a little more manual), I was able to move several lines of code and some
   superfluous logic. (wlb 2007-04-23)
-* Updated `_get_json_content` to use `to_builtin` instead of `__simplify__` 
+* Updated `_get_json_content` to use `to_builtin` instead of `__simplify__`
   (wlb 2007-04-26)
 * Fixed some bugs in helper `nav_list_for_resource` relating to parent args for
-  nav list creation: 1) When I factored out `nav_list_for_parent`, some vars 
+  nav list creation: 1) When I factored out `nav_list_for_parent`, some vars
   were moved that were still being referenced 2) The parent list was being
   *added* to the result list instead of *appended* (wlb 2007-04-27)
-
