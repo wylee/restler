@@ -11,6 +11,7 @@
 - Added Restler-controller-friendly entity (AKA model) base class.
 - Added @privileged decorator.
 - Manage releases with zest.releaser.
+- No longer handles database connectivity (less magical).
 
 Ancient History
 ---------------
