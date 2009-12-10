@@ -266,7 +266,7 @@ class Controller(WSGIController):
 
     def _render_json(self, block=None, **kwargs):
         """Render a JSON response from simplified ``member``s."""
-        obj = self._get_json_object(block=block)
+        obj = self._get_json_object(wrap=self.wrap, block=block)
         return self._render_object_as_json(obj)
 
     @jsonify
@@ -307,7 +307,7 @@ class Controller(WSGIController):
             obj = None
             result_count = 0
         # Wrap ``obj`` (usually)
-        if self.wrap:
+        if wrap:
             obj = dict(
                 response=dict(
                     results=obj,

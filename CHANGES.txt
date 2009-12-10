@@ -2,6 +2,9 @@
 ------------------
 
 - Bumped SQLAlchemy from 0.5.5 to 0.5.6.
+- Fixed small bug in JSON rendering--use `wrap` arg passed to method that
+  creates object to be JSONified instead of always using `self.wrap`. When
+  making the call to that method, pass a `wrap` value.
 
 0.3.0 (2009-11-06)
 ------------------
