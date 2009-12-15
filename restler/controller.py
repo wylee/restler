@@ -219,11 +219,28 @@ class Controller(WSGIController):
         warnings.warn(DeprecationWarning('Use `convert_param` method instead.'))
         return self.convert_param(name, val)
 
-    def _redirect_to_member(self, member=None):
+    def _redirect_to_member(self, member=None, relay_params=None, params=None):
+        """Redirect to a specific ``member``, defaulting to `self.member`.
+
+        ``relay_params`` List of params to relay from original request. If
+        the a param isn't in the original request, it's ignored and not
+        relayed to the redirect.
+
+        ``params`` Dict of additional params; will override ``relay_params``.
+
+        """
         member = self.member if member is None else member
+        redirect_params = {}
+        if relay_params:
+            for key in relay_params:
+                if key in request.params:
+                    redirect_params[key] = request.params[key]
+        if params:
+            for key in params:
+                redirect_params[key] = params[key]
         redirect_to(
             controller=self.controller, action='show', id=member.id,
-            format=self.format)
+            format=self.format, **redirect_params)
 
     def _redirect_to_collection(self):
         redirect_to(

@@ -1,7 +1,9 @@
 0.3.2 (unreleased)
 ------------------
 
-- Nothing changed yet.
+- When redirecting to a member, allow original request parameters to be
+  relayed to the redirect and also allow arbitrary extra params to be passed
+  to the redirect.
 
 
 0.3.1 (2009-12-10)
