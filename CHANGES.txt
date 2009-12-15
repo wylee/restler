@@ -1,4 +1,4 @@
-0.3.2 (unreleased)
+0.3.2 (2009-12-15)
 ------------------
 
 - When redirecting to a member, allow original request parameters to be
