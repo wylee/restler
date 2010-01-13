@@ -214,7 +214,7 @@ class EntityMeta(type):
     def __init__(cls, name, bases, attrs):
         import warnings
         warnings.warn(
-            'The EntityMeta metaclass is deprecated. ',
+            'The EntityMeta metaclass is deprecated. '
             'Use the restler.entity.instrument_class function instead.',
             DeprecationWarning, 2)
         type.__init__(cls, name, bases, attrs)
