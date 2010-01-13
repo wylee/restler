@@ -1,4 +1,4 @@
-0.3.3 (unreleased)
+0.3.3 (2010-01-13)
 ------------------
 
 - Use a function instead of a metaclass to instrument Entity classes with
