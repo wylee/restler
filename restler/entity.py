@@ -190,23 +190,19 @@ class Entity(object):
         return '\n'.join(string)
 
 
-class EntityMeta(type):
+def instrument_class(cls):
+    """Add member/collection class attributes to `Entity` subclass ``cls``.
 
-    def __init__(cls, name, bases, attrs):
-        """Add member/collection related class attributes to ``Entity`` classes.
+    ``cls`` will be instrumented with ``member_name``, ``collection_name``,
+    ``member_title``, and ``collection_title`` class attributes, IFF these
+    class attributes are not already set in the class definition.
 
-        Classes of this type are instrumented with ``member_name``,
-        ``collection_name``, ``member_title``, and ``collection_title`` class
-        attributes, IFF these class attributes are not already set in the
-        class definition.
-
-        """
-        type.__init__(cls, name, bases, attrs)
-        underscore_name = camel_to_underscore(cls.__name__)
-        cls.member_name = getattr(cls, 'member_name', underscore_name)
-        cls.collection_name = getattr(
-            cls, 'collection_name', '%ss' % underscore_name)
-        cls.member_title = getattr(
-            cls, 'member_title', underscore_to_title(cls.member_name))
-        cls.collection_title = getattr(
-            cls, 'collection_title', underscore_to_title(cls.collection_name))
+    """
+    if not hasattr(cls, 'member_name'):
+        cls.member_name = camel_to_underscore(cls.__name__)
+    if not hasattr(cls, 'collection_name'):
+        cls.collection_name = '{0}s'.format(cls.member_name)
+    if not hasattr(cls, 'member_title'):
+        cls.member_title = underscore_to_title(cls.member_name)
+    if not hasattr(cls, 'collection_title'):
+        cls.collection_title = underscore_to_title(cls.collection_name)
