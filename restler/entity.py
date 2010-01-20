@@ -52,7 +52,10 @@ class Entity(object):
     @property
     def id_str(self):
         """Convert `id` from Python to string."""
-        id = json.dumps(self.simplify_object(self.id))
+        if isinstance(self.id, basestring):
+            id = self.id
+        else:
+            id = json.dumps(self.simplify_object(self.id))
         return id
 
     @classmethod
