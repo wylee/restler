@@ -119,7 +119,7 @@ class Entity(object):
             val = self.simplify_object(o, n)
             if name == as_name:
                 # If `name` has only one part, this sets obj[name] = val.
-                # If `name` had more than N parts, this sets
+                # If `name` has more than one part (N parts), this sets
                 # obj[name1][name2][...][nameN] = val.
                 slot = obj
                 for n in name_parts[:-1]:
