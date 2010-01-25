@@ -15,7 +15,10 @@ from sqlalchemy.orm.exc import NoResultFound
 
 import mako
 
-import simplejson as json
+try:
+    import json
+except ImportError:
+    import simplejson as json
 
 from restler.decorators import privileged
 """Set `privileged` BEFORE importing this module, if needed."""
