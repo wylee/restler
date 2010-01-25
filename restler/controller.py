@@ -11,7 +11,6 @@ from pylons.decorators import jsonify
 from pylons.templating import render_mako as render
 
 from sqlalchemy.orm import class_mapper
-from sqlalchemy.orm.exc import NoResultFound
 
 import mako
 
