@@ -97,6 +97,20 @@ class Controller(WSGIController):
     def get_db_session(self):
         raise NotImplementedError
 
+    @property
+    def collection_path(self):
+        try:
+            self._collection_path
+        except AttributeError:
+            self._collection_path = '/'.join((
+                request.path.rsplit(self.collection_name, 1)[0].rstrip('/'),
+                self.collection_name))
+        return self._collection_path
+
+    def get_member_path(self, member):
+        id = getattr(member, 'id_str', None)
+        return '{0}/{1}'.format(self.collection_path, id)
+
     def index(self):
         self.set_collection()
         return self._render()
@@ -305,10 +319,14 @@ class Controller(WSGIController):
         if self.collection is not None:
             log.debug('Rendering collection')
             obj = self.entity.to_simple_collection(self.collection, self.fields)
+            for member, simple_member in zip(self.collection, obj):
+                simple_member['__path__'] = self.get_member_path(member)
             result_count = len(obj)
         elif self.member is not None:
             log.debug('Rendering member')
-            obj = [self.member.to_simple_object(self.fields)]
+            obj = self.member.to_simple_object(self.fields)
+            obj['__path__'] = self.get_member_path(self.member)
+            obj = [obj]
             result_count = 1
         else:
             log.debug('Neither collection nor member was set.')
