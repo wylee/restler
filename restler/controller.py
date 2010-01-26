@@ -1,5 +1,4 @@
 import logging
-import warnings
 
 from paste.deploy.converters import asbool, aslist
 
