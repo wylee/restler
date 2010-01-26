@@ -191,12 +191,17 @@ class Entity(object):
         return '\n'.join(string)
 
 
-def instrument_class(cls):
+def instrument_class(cls, mixin=Entity):
     """Add member/collection class attributes to `Entity` subclass ``cls``.
 
     ``cls`` will be instrumented with ``member_name``, ``collection_name``,
     ``member_title``, and ``collection_title`` class attributes, IFF these
     class attributes are not already set in the class definition.
+
+    In addition, ``mixin`` will be dynamically inserted into ``cls``'s
+    list of base classes. ``mixin`` must be :class:`Entity` or a subclass
+    (although this isn't currently enforced). ``mixin`` can also be `None`
+    to completely disable this "feature" (XXX: Should this be the default?).
 
     """
     if not hasattr(cls, 'member_name'):
@@ -207,3 +212,6 @@ def instrument_class(cls):
         cls.member_title = underscore_to_title(cls.member_name)
     if not hasattr(cls, 'collection_title'):
         cls.collection_title = underscore_to_title(cls.collection_name)
+    if mixin is not None and mixin not in cls.__bases__:
+            cls.__bases__ += (mixin,)
+    return cls
