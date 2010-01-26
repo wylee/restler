@@ -320,6 +320,14 @@ class Controller(WSGIController):
                 response=dict(
                     results=obj,
                     result_count=result_count,
+                    request=dict(
+                        method=request.method,
+                        app_url=request.application_url,
+                        path=request.path,
+                        collection_path=self.collection_path,
+                        params=(request.params.items() or None),
+                        query_string=(request.query_string or None),
+                    ),
                 )
             )
         # Further modify ``obj`` if ``block`` given
