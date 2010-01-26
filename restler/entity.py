@@ -158,11 +158,6 @@ class Entity(object):
         simple_obj = cls.to_simple_collection(collection, fields=fields)
         return json.dumps(simple_obj)
 
-    def get_column_default(self, key):
-        """Get default set in SQLA table (NOT server default)."""
-        default = self.__table__.columns.get(key).default.arg
-        return default
-
     @property
     def public_names(self):
         """We want all public DB columns and `property`s by default."""
