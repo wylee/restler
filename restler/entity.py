@@ -84,6 +84,10 @@ class Entity(object):
         return cls._has_multipart_primary_key
 
     @classmethod
+    def convert_param(self, name, val):
+        return val
+
+    @classmethod
     def simplify_object(cls, obj, name=None):
         """Convert ``obj`` to something JSON encoder can handle."""
         try:
