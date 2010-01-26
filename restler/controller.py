@@ -19,9 +19,6 @@ try:
 except ImportError:
     import simplejson as json
 
-from restler.decorators import privileged
-"""Set `privileged` BEFORE importing this module, if needed."""
-
 
 log = logging.getLogger(__name__)
 
@@ -117,7 +114,6 @@ class Controller(WSGIController):
         self.set_member(id)
         return self._render()
 
-    @privileged
     def create(self):
         self.set_member()
         self._update_member_with_params()
@@ -126,7 +122,6 @@ class Controller(WSGIController):
         self.db_session.commit()
         self._redirect_to_member()
 
-    @privileged
     def update(self, id):
         self.set_member(id)
         self._update_member_with_params()
@@ -134,7 +129,6 @@ class Controller(WSGIController):
         self.db_session.commit()
         self._redirect_to_member()
 
-    @privileged
     def delete(self, id):
         self.set_member(id)
         self.db_session.delete(self.member)
