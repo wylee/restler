@@ -5,7 +5,7 @@ Restler is a base controller for `Pylons` projects that provides a set of defaul
 
 == Quick Start ==
 
-This document contains info on the bleeding edge version of Restler (0.3.x). See http://code.google.com/p/restler/wiki/QuickStartZeroDotTwo for info on the previous version (0.2a18).
+This document contains info on the bleeding edge version of Restler, 0.4.x, which is only slightly different from 0.3.3. See http://code.google.com/p/restler/wiki/QuickStartZeroDotTwo for info on the previous version (0.2a18).
 
 
 === Install Pylons 0.9.7 ===
@@ -98,8 +98,6 @@ class Garage(restler.entity.Entity):
 # Add `member_name` et al:
 restler.entity.instrument_class(Garage)
 }}}
-
-XXX: `Entity` has a tiny bit of direct dependency on both SQLAlchemy (`self._sa_instance_state`, `Column`) and the declarative extension (`get_column_default` method uses `__table__`). The latter should be removed entirely. The former should be removed if at all possible.
 
 
 === Create a controller for each Entity class you want to expose ===

@@ -1,7 +1,27 @@
-0.3.4 (unreleased)
+0.4.0 (unreleased)
 ------------------
 
-- Nothing changed yet.
+- Upgraded SQLAlchemy from 0.5.7 to 0.5.8
+- Got rid of wanky privileges scheme. Removed decorators module altogether;
+  removed @privileges decorations from Controller class. Rationale: auth is
+  not really within Restler's scope, and it seems very likely that users
+  wouldn't want to use this simplistic scheme anyway.
+- Created a top-level API by importing a few things into the top-level
+  __init__.py.
+- Use json module from stdlib when available (i.e., Python 2.6+).
+- In addition to an object's type, inject its module and URL path into the
+  corresponding JSON object. Use __double_underscore__ style for these
+  attributes to indicated that they are "meta". `type` is now `__type__`
+  in JSON results.
+- Removed `Entity.get_column_default` method as this relies on SQLA's
+  declarative extension, but Restler does/should not depend on declarative
+  (it should only depend on mapped classes).
+- Delegate HTTP parameter parsing to entitu instead of handling that in
+  controller.
+- Inject request metadata into response objects (request method, URL,
+  path info, query params, etc). XXX: Account for proxy.
+- Removed templates, static files, and Web helpers.
+- Removed deprecated `EntityMeta` metaclass.
 
 
 0.3.3 (2010-01-13)
