@@ -1,11 +1,7 @@
-"""Entity base class and metaclass.
+"""Entity base class.
 
 The :class:`Entity` class here should be used as the base class for any and
 all entity classes, regardless of what database the entities are derived from.
-
-Ditto for the :class:`EntityMeta` class, which should be used as the basis
-for all SQLAlchemy declarative entities (which will probably be *all*
-entities).
 
 """
 import datetime
