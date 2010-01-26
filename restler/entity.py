@@ -108,7 +108,10 @@ class Entity(object):
         this arg isn't given, ``self.public_names`` is used instead.
 
         """
-        obj = dict(type=self.__class__.__name__)
+        obj = dict(
+            __module__=self.__class__.__module__,
+            __type__=self.__class__.__name__,
+        )
         if fields is None:
             fields = [(f, f) for f in self.public_names]
         for name, as_name in fields:
