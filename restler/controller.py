@@ -209,11 +209,7 @@ class Controller(WSGIController):
 
     def convert_param(self, name, val):
         """Convert param value (string) to Python value."""
-        return val
-
-    def _convert_param_for_update(self, name, val):
-        warnings.warn(DeprecationWarning('Use `convert_param` method instead.'))
-        return self.convert_param(name, val)
+        return self.entity.convert_param(name, val)
 
     def _redirect_to_member(self, member=None, relay_params=None, params=None):
         """Redirect to a specific ``member``, defaulting to `self.member`.
