@@ -209,16 +209,3 @@ def instrument_class(cls):
         cls.member_title = underscore_to_title(cls.member_name)
     if not hasattr(cls, 'collection_title'):
         cls.collection_title = underscore_to_title(cls.collection_name)
-
-
-class EntityMeta(type):
-    """Deprecated. Use :func:`instrument_class` instead."""
-
-    def __init__(cls, name, bases, attrs):
-        import warnings
-        warnings.warn(
-            'The EntityMeta metaclass is deprecated. '
-            'Use the restler.entity.instrument_class function instead.',
-            DeprecationWarning, 2)
-        type.__init__(cls, name, bases, attrs)
-        instrument_class(cls)
