@@ -1,4 +1,4 @@
-0.4.1 (unreleased)
+0.4.1 (2010-01-27)
 ------------------
 
 - Corrected paths returned in JSON responses so that they are relative to
