@@ -103,7 +103,7 @@ class Controller(WSGIController):
             self._collection_path
         except AttributeError:
             self._collection_path = '/'.join((
-                request.path.rsplit(self.collection_name, 1)[0].rstrip('/'),
+                request.path_info.rsplit(self.collection_name, 1)[0].rstrip('/'),
                 self.collection_name))
         return self._collection_path
 
@@ -341,7 +341,7 @@ class Controller(WSGIController):
                     request=dict(
                         method=request.method,
                         app_url=request.application_url,
-                        path=request.path,
+                        path=request.path_info,
                         collection_path=self.collection_path,
                         params=(request.params.items() or None),
                         query_string=(request.query_string or None),
