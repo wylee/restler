@@ -99,15 +99,17 @@ class Controller(WSGIController):
 
     @property
     def collection_path(self):
+        """Path to collection, including application path prefix."""
         try:
             self._collection_path
         except AttributeError:
             self._collection_path = '/'.join((
-                request.path_info.rsplit(self.collection_name, 1)[0].rstrip('/'),
+                request.path.rsplit(self.collection_name, 1)[0].rstrip('/'),
                 self.collection_name))
         return self._collection_path
 
     def get_member_path(self, member):
+        """Path to member, including application path prefix."""
         id = getattr(member, 'id_str', None)
         return '{0}/{1}'.format(self.collection_path, id)
 
@@ -340,9 +342,11 @@ class Controller(WSGIController):
                     result_count=result_count,
                     request=dict(
                         method=request.method,
-                        app_url=request.application_url,
-                        path=request.path_info,
-                        collection_path=self.collection_path,
+                        full_url=request.url,  # URL with query string
+                        host_url=request.host_url,  # URL of host (no path or query)
+                        app_prefix=request.script_name,  # Path to app
+                        path=request.path,  # Path *including* app prefix
+                        collection_path=self.collection_path,  # *Includes* app prefix
                         params=(request.params.items() or None),
                         query_string=(request.query_string or None),
                     ),
