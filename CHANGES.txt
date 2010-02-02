@@ -1,7 +1,17 @@
-0.4.2 (unreleased)
+0.4.2 (2010-02-02)
 ------------------
 
-- Nothing changed yet.
+This release contains a backwards-incompatible change to an undocumented
+(and somewhat experimental) feature: paths in responses, which was introduced
+in 0.4.0 and changed in 0.4.1.
+
+- Reverted the change made in 0.4.1 with regard to paths. Relative paths in
+  responses are now relative to the host URL instead of the application. This
+  seems to better reflect how these paths will actually be used--for example,
+  in an AJAX application, this style is more convenient.
+
+  In `response.request`, removed `app_url`; added `full_url`, `host_url`, and
+  `app_prefix`.
 
 
 0.4.1 (2010-01-27)
