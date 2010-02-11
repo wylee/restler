@@ -2,10 +2,10 @@ import logging
 
 from paste.deploy.converters import asbool, aslist
 
-from pylons import request, response
+from pylons import request, response, url
 from pylons import tmpl_context as c
 from pylons.controllers import WSGIController
-from pylons.controllers.util import abort, redirect_to
+from pylons.controllers.util import abort, redirect
 from pylons.decorators import jsonify
 from pylons.templating import render_mako as render
 
@@ -245,13 +245,13 @@ class Controller(WSGIController):
         if params:
             for key in params:
                 redirect_params[key] = params[key]
-        redirect_to(
+        redirect(url(
             controller=self.controller, action='show', id=member.id,
-            format=self.format, **redirect_params)
+            format=self.format, **redirect_params))
 
     def _redirect_to_collection(self):
-        redirect_to(
-            controller=self.controller, action='index', format=self.format)
+        redirect(url(
+            controller=self.controller, action='index', format=self.format))
 
     def _render(self, *args, **kwargs):
         format = kwargs.get('format', self.format)
