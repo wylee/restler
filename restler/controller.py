@@ -320,20 +320,22 @@ class Controller(WSGIController):
         """
         if self.collection is not None:
             log.debug('Rendering collection')
-            obj = self.entity.to_simple_collection(self.collection, self.fields)
-            for member, simple_member in zip(self.collection, obj):
-                simple_member['__path__'] = self.get_member_path(member)
-            result_count = len(obj)
+            items = self.collection
         elif self.member is not None:
             log.debug('Rendering member')
-            obj = self.member.to_simple_object(self.fields)
-            obj['__path__'] = self.get_member_path(self.member)
-            obj = [obj]
-            result_count = 1
+            items = [self.member]
         else:
             log.debug('Neither collection nor member was set.')
+            items = None
             obj = None
             result_count = 0
+
+        if items is not None:
+            obj = self.entity.to_simple_collection(items, self.fields)
+            for member, simple_member in zip(items, obj):
+                simple_member['__path__'] = self.get_member_path(member)
+            result_count = len(obj)
+
         # Wrap ``obj`` (usually)
         if wrap:
             obj = dict(
