@@ -1,4 +1,4 @@
-0.5.0 (unreleased)
+0.5.0 (2010-02-12)
 ------------------
 
 - Made changes needed for Pylons 1.0.
