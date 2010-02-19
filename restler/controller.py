@@ -230,8 +230,8 @@ class Controller(WSGIController):
         """Redirect to a specific ``member``, defaulting to `self.member`.
 
         ``relay_params`` List of params to relay from original request. If
-        the a param isn't in the original request, it's ignored and not
-        relayed to the redirect.
+        a param isn't in the original request, it's ignored and not relayed
+        to the redirect.
 
         ``params`` Dict of additional params; will override ``relay_params``.
 
@@ -245,13 +245,15 @@ class Controller(WSGIController):
         if params:
             for key in params:
                 redirect_params[key] = params[key]
-        redirect(url(
-            controller=self.controller, action='show', id=member.id,
-            format=self.format, **redirect_params))
+        redirect(
+            url(controller=self.controller, action='show', id=member.id,
+                format=self.format, **redirect_params),
+            code=303)
 
     def _redirect_to_collection(self):
-        redirect(url(
-            controller=self.controller, action='index', format=self.format))
+        redirect(
+            url(controller=self.controller, action='index', format=self.format),
+            code=303)
 
     def _render(self, *args, **kwargs):
         format = kwargs.get('format', self.format)
