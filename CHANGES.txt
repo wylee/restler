@@ -1,7 +1,25 @@
-0.5.1 (unreleased)
+0.5.1 (2010-02-18)
 ------------------
 
-- Nothing changed yet.
+- Use proper HTTP redirect status code when redirecting after POST or PUT
+  (303 See Other instead 302 Found). 302 means a resource moved temporarily,
+  which isn't semantically correct; we really want to say, "go see this other
+  resource," and this is exactly what the 303 status code is intended for.
+
+  IE (8, didn't test other IEs) won't follow a 302 returned from an AJAX
+  request, so this fixes that. Firefox will follow either a 302 or 303,
+  although technically following the 302 is incorrect ("...the user agent MUST
+  NOT automatically redirect the request unless it can be confirmed by the
+  user...").
+
+  XXX: Cross domain issue: When using 302, for some reason the Location
+  header used the script URL of the requesting application instead of the URL
+  of the Web service utilizing Restler. Now, using 303, the Location header
+  uses the URL of the Web service, so if the requesting application and the WS
+  are not in the same domain space, this will cause a problem as neither IE or
+  FF will follow the redirect in this case. TODO: At the moment, I'm not sure
+  what the best solution for this is. Is this something that can be handled in
+  a generic manner with X-Forwarded-For or something like that?
 
 
 0.5.0 (2010-02-12)
