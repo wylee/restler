@@ -226,6 +226,25 @@ class Controller(WSGIController):
         """Convert param value (string) to Python value."""
         return self.entity.convert_param(name, val)
 
+    def _do_redirect(self, url_args, redirect_args=None):
+        _url_args = dict(
+            controller=self.controller,
+            format=self.format,
+        )
+        _url_args.update(url_args)
+        redirect_url = url(**_url_args)
+        if request.is_xhr:
+            # X-Restler-Client-Request-URL is the URL used by the client to
+            # make requests to the Web service that is utilizing Restler.
+            # This is only relevant when using AJAX due to same-origin
+            # restrictions.
+            base_url = request.headers.get('X-Restler-Client-Request-URL', None)
+            if base_url is not None:
+                redirect_url = base_url.rstrip('/') + redirect_url
+        _redirect_args = dict(code=303)
+        _redirect_args.update(redirect_args or {})
+        redirect(redirect_url, **_redirect_args)
+
     def _redirect_to_member(self, member=None, relay_params=None, params=None):
         """Redirect to a specific ``member``, defaulting to `self.member`.
 
@@ -237,23 +256,19 @@ class Controller(WSGIController):
 
         """
         member = self.member if member is None else member
-        redirect_params = {}
+        url_args = {}
         if relay_params:
             for key in relay_params:
                 if key in request.params:
-                    redirect_params[key] = request.params[key]
+                    url_args[key] = request.params[key]
         if params:
             for key in params:
-                redirect_params[key] = params[key]
-        redirect(
-            url(controller=self.controller, action='show', id=member.id,
-                format=self.format, **redirect_params),
-            code=303)
+                url_args[key] = params[key]
+        url_args.update(action='show', id=member.id)
+        self._do_redirect(url_args)
 
     def _redirect_to_collection(self):
-        redirect(
-            url(controller=self.controller, action='index', format=self.format),
-            code=303)
+        self._do_redirect(dict(action='index'))
 
     def _render(self, *args, **kwargs):
         format = kwargs.get('format', self.format)
