@@ -1,7 +1,13 @@
-0.5.2 (unreleased)
+0.5.2 (2010-02-24)
 ------------------
 
-- Nothing changed yet.
+- Allow clients to specify the base URL for redirects via a custom header--
+  X-Restler-Client-Request-URL. Previously, the URLs generated for redirects
+  were relative. These were being converted to absolute URLs in the Location
+  header of the redirect. Obviously, this wouldn't work for requests coming
+  from a different domain.
+
+  XXX: Is there a better way to do this, perhaps with standard headers?
 
 
 0.5.1 (2010-02-18)
