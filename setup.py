@@ -43,7 +43,7 @@ Restler was originally extracted from the byCycle bicycle trip planner
     zip_safe=False,
     install_requires=(
         'decorator>=3.1.2',
-        'SQLAlchemy>=0.5.8',
+        'SQLAlchemy>=0.5.8,<0.5.999',
     ),
     test_suite = 'nose.collector',
 )
