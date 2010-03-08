@@ -1,4 +1,4 @@
-0.5.3 (unreleased)
+0.5.3 (2010-03-08)
 ------------------
 
 - Ensure SQLAlchemy 0.5.x until 0.6 comes out of beta.
