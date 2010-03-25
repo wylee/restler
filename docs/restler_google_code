@@ -20,6 +20,12 @@ Restler is developed against Pylons 1.0.
 === Install Restler ===
 
 {{{
+easy_install Restler
+}}}
+
+Or, if you want to hack on Restler:
+
+{{{
 svn checkout http://restler.googlecode.com/svn/trunk/ Restler
 cd Restler
 python setup.py develop
