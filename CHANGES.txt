@@ -1,7 +1,13 @@
 0.5.4 (unreleased)
 ------------------
 
-- Nothing changed yet.
+- Added support for specifying fields to include and/or exclude via the
+  `fields` query parameter. This is done by prepending a "+" or "-" sign to
+  field names.
+
+  Previously, the options were to A) specify the exact list of fields or B)
+  not provide a list to use the default list. The new +/- options allow for
+  `default set plus extras` and `default set minus unneeded fields`.
 
 
 0.5.3 (2010-03-08)

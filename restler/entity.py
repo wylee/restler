@@ -102,19 +102,79 @@ class Entity(object):
         return obj
 
     def to_simple_object(self, fields=None):
-        """Convert this object into a simplified form that can be JSONified.
+        """Convert and return simplified form of `self` that can be JSONified.
 
-        ``fields`` is a list of pairs of (attribute name, mapped name). If
-        this arg isn't given, ``self.public_names`` is used instead.
+        ``fields`` is a list of attributes to include and/or exclude in the
+        returned object object. If ``fields`` is `None`, the default set of
+        fields will be used; (the list of names returned by
+        :meth:`public_names`).
+
+        When ``fields`` is *not* `None`, the special value "*" can be given as
+        one of the list items to indicate that the default set of fields
+        should be used. In this case, "+" and "-" fields (see below) will be
+        included or excluded relative to the default set.
+
+        Each item in the list may be either a string or a dict. A string is
+        used to indicate that an attribute's name should be used as-is in the
+        response.
+
+        A dict is used to map the field's column name to a different name
+        in the response. In this case, the dict must contain a ``name`` key
+        with the field's column name and a ``mapping`` key with the name
+        desired in the reponse.
+
+        In either case, the first character of the attribute name may be a "+"
+        or a "-". These are used to, respectively, include or exclude fields
+        from the result object. "-my_attr" used with "*" is an easy way to say
+        "Everything but my_attr." "+my_attr" used with "*" is an easy way
+        (the *only* way!) to include fields that aren't part of the default
+        set (for example, relations are never included by default).
+
+        XXX: Split parsing of ``fields`` out into one or more other methods;
+        add unit tests for those methods.
 
         """
+        if fields is None:
+            fields = ['*']
+
         obj = dict(
             __module__=self.__class__.__module__,
             __type__=self.__class__.__name__,
         )
-        if fields is None:
-            fields = [(f, f) for f in self.public_names]
-        for name, as_name in fields:
+
+        mapped_fields = []
+        if isinstance(fields, dict):
+            # Support legacy dict format wherein every field is mapped to
+            # a name, even if it's the same name.
+            mapped_fields = fields.items()
+        else:
+            # In all other cases, we assume ``fields`` is a sequence type.
+            for item in fields:
+                if isinstance(item, basestring):
+                    mapped_fields.append((item, item))
+                elif isinstance(item, dict):
+                    mapped_fields.append((item['name'], item['mapping']))
+
+        include_fields = set()
+        exclude_fields = set()
+
+        for name, as_name in mapped_fields:
+            first_token = name[0]
+            if first_token in '+-':
+                name = name.lstrip('+-')
+                as_name = as_name.lstrip('+-')
+            if first_token == '+':
+                include_fields.add((name, as_name))
+            elif first_token == '-':
+                exclude_fields.add(name)
+            elif first_token == '*' and len(name) == 1:
+                include_fields.update([(f, f) for f in self.public_names])
+            else:
+                include_fields.add((name, as_name))
+
+        include_fields -= exclude_fields
+
+        for name, as_name in include_fields:
             name_parts = name.split('.')
             o = self
             for n in name_parts:
