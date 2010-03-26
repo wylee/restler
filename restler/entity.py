@@ -107,7 +107,7 @@ class Entity(object):
         ``fields`` is a list of attributes to include and/or exclude in the
         returned object object. If ``fields`` is `None`, the default set of
         fields will be used; (the list of names returned by
-        :meth:`public_names`).
+        :meth:`_public_names`).
 
         When ``fields`` is *not* `None`, the special value "*" can be given as
         one of the list items to indicate that the default set of fields
@@ -168,7 +168,7 @@ class Entity(object):
             elif first_token == '-':
                 exclude_fields.add(name)
             elif first_token == '*' and len(name) == 1:
-                include_fields.update([(f, f) for f in self.public_names])
+                include_fields.update([(f, f) for f in self._public_names])
             else:
                 include_fields.add((name, as_name))
 
@@ -218,10 +218,10 @@ class Entity(object):
         return json.dumps(simple_obj)
 
     @property
-    def public_names(self):
+    def _public_names(self):
         """We want all public DB columns and `property`s by default."""
         try:
-            self._public_names
+            self.__public_names
         except AttributeError:
             names = []
             class_attrs = self.__class__.__dict__
@@ -240,11 +240,11 @@ class Entity(object):
                         if issubclass(clause_el.__class__, Column):
                             names.append(name)
             names = set(names)
-            self._public_names = names
-        return self._public_names
+            self.__public_names = names
+        return self.__public_names
 
     def __str__(self):
-        names = sorted(self.public_names)
+        names = sorted(self._public_names)
         title = self.member_title
         string = [title, '-' * len(title)]
         string += ['%s: %s' % (name, getattr(self, name)) for name in names]
