@@ -11,7 +11,7 @@ from pylons.templating import render_mako as render
 
 from sqlalchemy.orm import class_mapper
 
-import mako
+import mako.exceptions
 
 try:
     import json
