@@ -5,16 +5,16 @@ Restler is a base controller for `Pylons` projects that provides a set of defaul
 
 == Quick Start ==
 
-This document contains info on the bleeding edge version of Restler, 0.4.x, which is only slightly different from 0.3.3. See http://code.google.com/p/restler/wiki/QuickStartZeroDotTwo for info on the previous version (0.2a18).
+This document contains info on the bleeding edge version of Restler, 0.5.x.
 
 
-=== Install Pylons 1.0 ===
+=== Install Pylons ===
+
+Restler is developed against Pylons 1.0.
 
 {{{
 easy_install Pylons==1.0rc1
 }}}
-
-Restler is developed against Pylons 1.0.
 
 
 === Install Restler ===
