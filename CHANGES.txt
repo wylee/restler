@@ -1,6 +1,7 @@
 0.5.4 (unreleased)
 ------------------
 
+- Finally started adding unit tests!
 - Added support for specifying fields to include and/or exclude via the
   `fields` query parameter. This is done by prepending a "+" or "-" sign to
   field names.

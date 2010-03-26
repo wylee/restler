@@ -104,6 +104,43 @@ class Entity(object):
     def to_simple_object(self, fields=None):
         """Convert and return simplified form of `self` that can be JSONified.
 
+        See :meth:`_parse_fields_for_simple_object` for description of
+        ``fields``.
+
+        """
+        obj = dict(
+            __module__=self.__class__.__module__,
+            __type__=self.__class__.__name__,
+        )
+        include_fields = self._parse_fields_for_simple_object(fields)
+        for name, as_name in include_fields:
+            name_parts = name.split('.')
+            o = self
+            for n in name_parts:
+                o = getattr(o, n)
+            val = self.simplify_object(o, n)
+            if name == as_name:
+                # If `name` has only one part, this sets obj[name] = val.
+                # If `name` has more than one part (N parts), this sets
+                # obj[name1][name2][...][nameN] = val.
+                slot = obj
+                for n in name_parts[:-1]:
+                    slot = slot.setdefault(n, {})
+                slot[name_parts[-1]] = val
+            else:
+                # Use user-specified name
+                obj[as_name] = val
+        return obj
+
+    def _parse_fields_for_simple_object(self, fields):
+        """Parse ``fields`` and return the set of fields to be included.
+
+        Each item in the returned set will be a 2-tuple mapping an Entity
+        instance attribute name to another name. The mapped name might be the
+        same as the attribute name::
+
+            {('attr1', 'attr1'), ('attr2', 'different_name'), ...}
+
         ``fields`` is a list of attributes to include and/or exclude in the
         returned object object. If ``fields`` is `None`, the default set of
         fields will be used; (the list of names returned by
@@ -130,18 +167,9 @@ class Entity(object):
         (the *only* way!) to include fields that aren't part of the default
         set (for example, relations are never included by default).
 
-        XXX: Split parsing of ``fields`` out into one or more other methods;
-        add unit tests for those methods.
-
         """
         if fields is None:
             fields = ['*']
-
-        obj = dict(
-            __module__=self.__class__.__module__,
-            __type__=self.__class__.__name__,
-        )
-
         mapped_fields = []
         if isinstance(fields, dict):
             # Support legacy dict format wherein every field is mapped to
@@ -154,10 +182,8 @@ class Entity(object):
                     mapped_fields.append((item, item))
                 elif isinstance(item, dict):
                     mapped_fields.append((item['name'], item['mapping']))
-
         include_fields = set()
         exclude_fields = set()
-
         for name, as_name in mapped_fields:
             first_token = name[0]
             if first_token in '+-':
@@ -171,27 +197,8 @@ class Entity(object):
                 include_fields.update([(f, f) for f in self._public_names])
             else:
                 include_fields.add((name, as_name))
-
         include_fields -= exclude_fields
-
-        for name, as_name in include_fields:
-            name_parts = name.split('.')
-            o = self
-            for n in name_parts:
-                o = getattr(o, n)
-            val = self.simplify_object(o, n)
-            if name == as_name:
-                # If `name` has only one part, this sets obj[name] = val.
-                # If `name` has more than one part (N parts), this sets
-                # obj[name1][name2][...][nameN] = val.
-                slot = obj
-                for n in name_parts[:-1]:
-                    slot = slot.setdefault(n, {})
-                slot[name_parts[-1]] = val
-            else:
-                # Use user-specified name
-                obj[as_name] = val
-        return obj
+        return include_fields
 
     def to_json(self, fields=None):
         return json.dumps(self.to_simple_object(fields=fields))
