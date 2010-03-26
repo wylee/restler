@@ -26,7 +26,7 @@ easy_install Restler
 Or, if you want to hack on Restler:
 
 {{{
-svn checkout http://restler.googlecode.com/svn/trunk/ Restler
+hg clone https://restler.googlecode.com/hg/ Restler
 cd Restler
 python setup.py develop
 }}}
