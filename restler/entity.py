@@ -170,32 +170,30 @@ class Entity(object):
         """
         if fields is None:
             fields = ['*']
-        mapped_fields = []
-        if isinstance(fields, dict):
+        elif isinstance(fields, dict):
             # Support legacy dict format wherein every field is mapped to
             # a name, even if it's the same name.
-            mapped_fields = fields.items()
-        else:
-            # In all other cases, we assume ``fields`` is a sequence type.
-            for item in fields:
-                if isinstance(item, basestring):
-                    mapped_fields.append((item, item))
-                elif isinstance(item, dict):
-                    mapped_fields.append((item['name'], item['mapping']))
+            fields = [dict(name=k, mapping=v) for k, v in fields.items()]
+        mapped_fields = []
         include_fields = set()
         exclude_fields = set()
-        for name, as_name in mapped_fields:
-            first_token = name[0]
-            if first_token in '+-':
-                name = name.lstrip('+-')
-                as_name = as_name.lstrip('+-')
-            if first_token == '-':
-                exclude_fields.add(name)
-            elif first_token == '*' and len(name) == 1:
-                include_fields.update([(f, f) for f in self._public_names])
+        for item in fields:
+            if isinstance(item, basestring):
+                name, as_name = item, item
+            elif isinstance(item, dict):
+                name, as_name = item['name'], item['mapping']
+            if name.startswith('-'):
+                exclude_fields.add(name.lstrip('-'))
+            elif name == '*':
+                mapped_fields += [(n, n) for n in self._public_names]
             else:
+                # Note that unprefixed fields and fields prefixed with "+"
+                # have the same semantics, and that's why we always strip
+                # leading "+"s here.
+                mapped_fields.append((name.lstrip('+'), as_name.lstrip('+')))
+        for name, as_name in mapped_fields:
+            if name not in exclude_fields:
                 include_fields.add((name, as_name))
-        include_fields -= exclude_fields
         return include_fields
 
     def to_json(self, fields=None):
