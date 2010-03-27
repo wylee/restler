@@ -18,8 +18,10 @@ class Fields_for_Simple_Object(unittest.TestCase):
         self.assertEqual(fields, self.default_set)
 
     def should_include_extra_fields_when_specified(self):
-        fields = self.entity._parse_fields_for_simple_object(['*', '+_public_names'])
-        expected_fields = self.default_set.union(set([('_public_names', '_public_names')]))
+        fields = self.entity._parse_fields_for_simple_object(
+            ['*', '+_public_names'])
+        expected_fields = self.default_set.union(
+            set([('_public_names', '_public_names')]))
         self.assertEqual(fields, expected_fields)
 
     def should_exclude_specified_fields(self):
