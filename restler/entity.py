@@ -189,9 +189,7 @@ class Entity(object):
             if first_token in '+-':
                 name = name.lstrip('+-')
                 as_name = as_name.lstrip('+-')
-            if first_token == '+':
-                include_fields.add((name, as_name))
-            elif first_token == '-':
+            if first_token == '-':
                 exclude_fields.add(name)
             elif first_token == '*' and len(name) == 1:
                 include_fields.update([(f, f) for f in self._public_names])
