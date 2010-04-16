@@ -67,7 +67,7 @@ class Entity(object):
             if not isinstance(id, list):
                 raise ValueError(
                     'Expected a string that could be parsed as a multi-part '
-                    'primary key. Something like `(1, "a")`')
+                    'primary key--something like [1, "a"].')
         return id
 
     @classmethod
