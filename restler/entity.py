@@ -62,12 +62,17 @@ class Entity(object):
         JSON encoded and decode it.
 
         """
+        pk = class_mapper(cls).primary_key
         if cls.has_multipart_primary_key():
             id = json.loads(id)
             if not isinstance(id, list):
                 raise ValueError(
                     'Expected a string that could be parsed as a multi-part '
                     'primary key--something like [1, "a"].')
+            for i, col, val in zip(range(len(id)), pk, id):
+                id[i] = cls.convert_param(col.name, val)
+        else:
+            id = cls.convert_param(pk[0].name, id)
         return id
 
     @classmethod
