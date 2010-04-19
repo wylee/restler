@@ -1,7 +1,9 @@
-0.5.5 (unreleased)
+0.5.5 (2010-04-19)
 ------------------
 
-- Nothing changed yet.
+- When converting strings to IDs for an Entity, call `convert_param` on the
+  ID (or its parts for a composite key) so it (or parts) will be converted to
+  the proper type(s).
 
 
 0.5.4 (2010-03-29)
