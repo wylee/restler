@@ -1,7 +1,10 @@
 0.5.6 (unreleased)
 ------------------
 
-- Nothing changed yet.
+- Allow an arbitrary SQL filter to be passed via a new query parameter
+  named `where_clause`. This parameter can contain any SQL that would be
+  valid as part of a where clause. Note that if other filters and filter
+  params are passed along with `where_clause`, they will be ANDed together.
 
 
 0.5.5 (2010-04-19)

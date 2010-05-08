@@ -36,6 +36,7 @@ class Controller(WSGIController):
     """Entity class assocated with this controller."""
 
     base_filter_params = dict(
+        where_clause=NoDefaultValue,  # Any valid SQL where clause fragment
         distinct=False,
         offset=None,
         start=None,
@@ -174,6 +175,10 @@ class Controller(WSGIController):
         offset = filters.pop('offset', filters.pop('start', None))
         limit = filters.pop('limit', None)
         order_by = filters.pop('order_by', None)
+
+        where_clause = filters.pop('where_clause', NoDefaultValue)
+        if where_clause is not NoDefaultValue:
+            q = q.filter(where_clause)
 
         for k, v in filters.items():
             v = self.convert_param(k, v)
