@@ -1,7 +1,7 @@
 from setuptools import setup, find_packages
 
 
-version = '0.5.7dev'
+version = '0.6.0dev'
 
 
 setup(
@@ -38,7 +38,7 @@ Restler was originally extracted from the byCycle bicycle trip planner
     zip_safe=False,
     install_requires=(
         'decorator>=3.1.2',
-        'SQLAlchemy>=0.5.8,<0.5.999',
+        'SQLAlchemy>=0.6.0',
     ),
     test_suite = 'nose.collector',
 )
