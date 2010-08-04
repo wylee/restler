@@ -206,11 +206,14 @@ class Controller(WSGIController):
         params = request.params
         for name in filter_params:
             if name in params:
-                # Use param value unless it's blank. XXX: Don't strip?
+                # Get value from request params. If the value is not blank,
+                # that value is used; otherwise, we use the default value.
                 val = params.get(name)
-                if val.strip() == '':
+                if not val:
                     val = filter_params[name]
             else:
+                # Param wasn't passed in request params, so use the default
+                # value.
                 val = filter_params[name]
             if val is not NoDefaultValue:
                 if callable(val):
