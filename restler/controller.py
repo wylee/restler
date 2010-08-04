@@ -159,7 +159,7 @@ class Controller(WSGIController):
             member = self.get_entity_or_404(id)
         self.member = member
 
-    def set_collection(self, q=None, extra_filters=None):
+    def set_collection(self, q=None, extra_filters=None, filter_params=None):
         q = q if q is not None else self.db_session.query(self.entity)
 
         # Apply "global" (i.e., every request) filters
@@ -170,6 +170,8 @@ class Controller(WSGIController):
         # Apply per-request filters
         filters = self._set_filters_from_params(self.base_filter_params)
         filters.update(self._set_filters_from_params(self.filter_params))
+        if filter_params is not None:
+            filters.update(self._set_filters_from_params(filter_params))
 
         distinct = asbool(filters.pop('distinct', False))
         offset = filters.pop('offset', filters.pop('start', None))
