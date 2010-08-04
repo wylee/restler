@@ -1,7 +1,12 @@
-0.6.1 (unreleased)
+0.6.1 (2010-08-04)
 ------------------
 
-- Nothing changed yet.
+- Allow default filter params to be overridden when calling `set_collection`
+  (added `filter_params=None` keyword arg).
+- Don't strip query parameter values for filter params, since whitespace
+  padded values and values consisting of only spaces are both valid in some
+  scenarios (e.g., Oracle CHAR(1) where " " is a meaningful value).
+  (XXX: this change might be backward incompatible)
 
 
 0.6.0 (2010-05-12)
