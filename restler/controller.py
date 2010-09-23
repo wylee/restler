@@ -33,7 +33,7 @@ class NoDefaultValue(object):
 class Controller(WSGIController):
 
     entity = None
-    """Entity class assocated with this controller."""
+    """Entity class associated with this controller."""
 
     base_filter_params = dict(
         where_clause=NoDefaultValue,  # Any valid SQL where clause fragment
