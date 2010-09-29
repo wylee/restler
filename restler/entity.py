@@ -232,11 +232,11 @@ class Entity(object):
             self.__public_names
         except AttributeError:
             names = []
-            class_attrs = self.__class__.__dict__
+            class_attrs = dir(self.__class__)
             for name in class_attrs:
                 if name.startswith('_'):
                     continue
-                attr = class_attrs[name]
+                attr = getattr(self.__class__, name)
                 if isinstance(attr, property):
                     names.append(name)
                 else:
