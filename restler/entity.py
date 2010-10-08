@@ -122,6 +122,8 @@ class Entity(object):
             name_parts = name.split('.')
             o = self
             for n in name_parts:
+                if o is None:
+                    break
                 o = getattr(o, n)
             val = self.simplify_object(o, n)
             if name == as_name:
