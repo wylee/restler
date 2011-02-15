@@ -1,7 +1,26 @@
 0.6.2 (unreleased)
 ------------------
 
-- Nothing changed yet.
+- By default, include attributes and properties from base classes when
+  creating simple objects. This only applies when the set of fields to
+  include isn't explicitly specified (e.g., via the `fields` query
+  parameter).
+
+- When creating simple objects, don't blow up when accessing an attribute
+  of a field that may be NULL. Previously, an AttributeError would be
+  raised. This comes up when a sub-attribute is requested via the `fields`
+  query param using dot notation--e.g., fields=["assignee.full_name"].
+  Assuming `assignee` could be NULL, it seems preferable to return
+  `"assignee": null` in the JSON representation than to blow up with an
+  internal server error. The client can check for `null` and raise an
+  error if appropriate.
+
+- When the client specifies the URL it uses to access the WS server
+  utilizing Restler (via the X-Restler-Client-Request-URL header), make sure
+  that URL paths generated for redirection don't include the SCRIPT_NAME of
+  the WS server.
+
+- Added some tests for redirection.
 
 
 0.6.1 (2010-08-04)
