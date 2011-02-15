@@ -237,23 +237,38 @@ class Controller(WSGIController):
         return self.entity.convert_param(name, val)
 
     def _do_redirect(self, url_args, redirect_args=None):
-        _url_args = dict(
-            controller=self.controller,
-            format=self.format,
-        )
-        _url_args.update(url_args)
-        redirect_url = url(**_url_args)
-        if request.is_xhr:
-            # X-Restler-Client-Request-URL is the URL used by the client to
-            # make requests to the Web service that is utilizing Restler.
-            # This is only relevant when using AJAX due to same-origin
-            # restrictions.
-            base_url = request.headers.get('X-Restler-Client-Request-URL', None)
-            if base_url is not None:
-                redirect_url = base_url.rstrip('/') + redirect_url
-        _redirect_args = dict(code=303)
-        _redirect_args.update(redirect_args or {})
-        redirect(redirect_url, **_redirect_args)
+        """Redirect (303 See Other) to a member or collection."""
+        url_args.setdefault('controller', self.controller)
+        url_args.setdefault('format', self.format)
+        if redirect_args is None:
+            redirect_args = {}
+        redirect_args.setdefault('code', 303)
+        # X-Restler-Client-Request-URL is the URL used by the client to
+        # make requests to the Web service that is utilizing Restler.
+        # Typically, this would be the (fully qualified) URL of a proxy
+        # server. This is only relevant when using AJAX due to same-origin
+        # restrictions.
+        base_url = request.headers.get('X-Restler-Client-Request-URL')
+        if request.is_xhr and base_url:
+            # For AJAX requests where a "client request URL" has been
+            # specified, we want to prepend that URL instead of using the
+            # URL or path of the WS server.
+            #
+            # `url` will prepend the SCRIPT_NAME for the WS server, which
+            # must be stripped, because we want only the path *within* the
+            # WS server. This is because we have know way of knowing how the
+            # client proxy is mapped to the WS server.
+            redirect_path = url(**url_args)
+            script_name = request.script_name
+            if script_name and redirect_path.startswith(script_name):
+                redirect_path = redirect_path.replace(script_name, '', 1)
+            redirect_url = base_url.rstrip('/') + redirect_path
+        else:
+            # For non-AJAX requests or requests that don't specify a client
+            # request URL, assume we want to redirect to the same origin that
+            # the original request came from.
+            redirect_url = url(**url_args)
+        redirect(redirect_url, **redirect_args)
 
     def _redirect_to_member(self, member=None, relay_params=None, params=None):
         """Redirect to a specific ``member``, defaulting to `self.member`.
