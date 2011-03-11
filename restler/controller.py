@@ -62,7 +62,7 @@ class Controller(WSGIController):
             return super(Controller, self).__call__(environ, start_response)
         finally:
             log.debug('Clearing database session...')
-            self.db_session.remove()
+            self.clear_db_session()
 
     def __before__(self, *args, **kwargs):
         self.db_session.get_bind(class_mapper(self.entity))
@@ -97,6 +97,9 @@ class Controller(WSGIController):
 
     def get_db_session(self):
         raise NotImplementedError
+
+    def clear_db_session(self):
+        self.db_session.remove()
 
     @property
     def collection_path(self):

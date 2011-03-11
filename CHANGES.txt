@@ -1,7 +1,14 @@
 0.6.3 (unreleased)
 ------------------
 
-- Nothing changed yet.
+- Don't assume a thread local database session factory is in use. Added
+  a `clear_db_session` API method that is now called from the `finally`
+  clause in the Restler controller's `__call__` instead of directly
+  calling the session factory's `remove` method. The default implementation
+  assumes a thread local session factory is in use and calls its `remove`
+  method just like before. The difference now is that subclasses can more
+  easily override this behavior by providing an alternate implemenation
+  (which, perhaps, does nothing).
 
 
 0.6.2 (2011-02-15)
