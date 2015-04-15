@@ -1,0 +1,1 @@
+Project hosting has been moved to Bitbucket: https://bitbucket.org/wyatt/restler
